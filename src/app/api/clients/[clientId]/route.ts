@@ -46,23 +46,29 @@ export async function GET(
       return NextResponse.json({ error: "Client not found" }, { status: 404 });
     }
 
-    // Calculate Summary Stats
+    // Calculate Summary Stats accurately across all client items
+    const allClientItems = await db.contentItem.findMany({
+      where: { clientId },
+      select: { status: true, platforms: true, scheduledFor: true },
+    });
+
     const contentStats = {
-      drafts: client.contentItems.filter((i) => i.status === "DRAFT").length,
-      pendingApproval: client.contentItems.filter((i) => i.status === "PENDING_APPROVAL").length,
-      approved: client.contentItems.filter((i) => i.status === "APPROVED").length,
-      scheduled: client.contentItems.filter((i) => i.status === "SCHEDULED").length,
-      published: client.contentItems.filter((i) => i.status === "PUBLISHED").length,
+      drafts: allClientItems.filter((i) => i.status === "DRAFT").length,
+      pendingApproval: allClientItems.filter((i) => i.status === "PENDING_APPROVAL" || i.status === "READY_FOR_REVIEW").length,
+      changesRequested: allClientItems.filter((i) => i.status === "CHANGES_REQUESTED").length,
+      approved: allClientItems.filter((i) => i.status === "APPROVED" || i.status === "READY_TO_SCHEDULE").length,
+      scheduled: allClientItems.filter((i) => i.status === "SCHEDULED").length,
+      published: allClientItems.filter((i) => i.status === "PUBLISHED").length,
     };
 
     // Calculate This Week Scheduled Posts
-    const scheduledThisWeek = client.contentItems.filter((i) => i.status === "SCHEDULED").length;
+    const scheduledThisWeek = allClientItems.filter((i) => i.status === "SCHEDULED").length;
 
     // Platform Distribution
     const platformDistribution = {
-      Facebook: client.contentItems.filter((i) => i.platforms.includes("FACEBOOK")).length,
-      Instagram: client.contentItems.filter((i) => i.platforms.includes("INSTAGRAM")).length,
-      TikTok: client.contentItems.filter((i) => i.platforms.includes("TIKTOK")).length,
+      Facebook: allClientItems.filter((i) => i.platforms.includes("FACEBOOK")).length,
+      Instagram: allClientItems.filter((i) => i.platforms.includes("INSTAGRAM")).length,
+      TikTok: allClientItems.filter((i) => i.platforms.includes("TIKTOK")).length,
     };
 
     return NextResponse.json({

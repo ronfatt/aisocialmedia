@@ -94,6 +94,11 @@ model Client {
   socialAccounts    SocialAccount[]
   campaigns         Campaign[]
   contentItems      ContentItem[]
+  postVariants      PostVariant[]
+  contentVersions   ContentVersion[]
+  approvalRequests  ApprovalRequest[]
+  referenceAssets   ClientReferenceAsset[]
+  aiGenerationLogs  AiGenerationLog[]
   mediaAssets       MediaAsset[]
   activityLogs      ActivityLog[]
 
@@ -269,6 +274,8 @@ model ContentPillar {
   orderIndex  Int            @default(0)
   createdAt   DateTime       @default(now())
 
+  contentItems ContentItem[]
+
   @@index([strategyId])
 }
 
@@ -322,40 +329,217 @@ model SocialAccount {
 // ----------------------------------------------------
 
 model Campaign {
-  id          String        @id @default(cuid())
-  clientId    String
-  client      Client        @relation(fields: [clientId], references: [id], onDelete: Cascade)
-  name        String
-  startDate   DateTime?
-  endDate     DateTime?
-  status      String        @default("Active")
-  createdAt   DateTime      @default(now())
-
-  contentItems ContentItem[]
-  @@index([clientId])
-}
-
-model ContentItem {
   id              String        @id @default(cuid())
+  organizationId  String?
   clientId        String
   client          Client        @relation(fields: [clientId], references: [id], onDelete: Cascade)
-  campaignId      String?
-  campaign        Campaign?     @relation(fields: [campaignId], references: [id], onDelete: SetNull)
-  title           String
+  name            String
   description     String?
-  contentPillar   String?       // Content pillar title or tag
-  status          String        @default("DRAFT") // DRAFT, PENDING_APPROVAL, APPROVED, SCHEDULED, PUBLISHED, ARCHIVED
-  scheduledFor    DateTime?
-  publishedAt     DateTime?
-  platforms       String        @default("[\"FACEBOOK\"]") // JSON array of platforms
-  internalNotes   String?
+  objective       String?
+  targetAudience  String?
+  keyMessage      String?
+  cta             String?
+  startDate       DateTime?
+  endDate         DateTime?
+  status          String        @default("ACTIVE") // DRAFT, ACTIVE, PAUSED, COMPLETED, ARCHIVED
   createdBy       String        @default("Agency Team")
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
 
+  contentItems    ContentItem[]
+
+  @@index([clientId])
+  @@index([status])
+}
+
+model ContentItem {
+  id                String        @id @default(cuid())
+  organizationId    String?
+  clientId          String
+  client            Client        @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  campaignId        String?
+  campaign          Campaign?     @relation(fields: [campaignId], references: [id], onDelete: SetNull)
+  contentPillarId   String?
+  contentPillarRel  ContentPillar? @relation(fields: [contentPillarId], references: [id], onDelete: SetNull)
+  
+  title             String
+  description       String?
+  internalBrief     String?
+  coreMessage       String?
+  objective         String?
+  contentPillar     String?       // Content pillar title or tag
+  
+  contentType       String        @default("IMAGE") // IMAGE, CAROUSEL, VIDEO, REEL, SHORT_VIDEO, TEXT, STORY, OTHER
+  status            String        @default("DRAFT") // DRAFT, GENERATING, READY_FOR_REVIEW, CHANGES_REQUESTED, APPROVED, READY_TO_SCHEDULE, SCHEDULED, PUBLISHED, FAILED, ARCHIVED
+  
+  targetAudience    String?
+  targetLocation    String?
+  callToAction      String?
+  productsServices  String?
+  
+  platforms         String        @default("[\"FACEBOOK\"]") // JSON array of platforms e.g. ["FACEBOOK","INSTAGRAM","TIKTOK"]
+  mediaUrls         String        @default("[]") // JSON array of media URLs or IDs
+  internalNotes     String?
+  
+  scheduledFor      DateTime?
+  publishedAt       DateTime?
+  
+  createdBy         String        @default("Agency Team")
+  assignedTo        String?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  variants          PostVariant[]
+  versions          ContentVersion[]
+  approvalRequests  ApprovalRequest[]
+  aiLogs            AiGenerationLog[]
+
   @@index([clientId])
   @@index([status])
   @@index([scheduledFor])
+  @@index([campaignId])
+}
+
+model PostVariant {
+  id                String          @id @default(cuid())
+  organizationId    String?
+  clientId          String
+  client            Client          @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  contentItemId     String
+  contentItem       ContentItem     @relation(fields: [contentItemId], references: [id], onDelete: Cascade)
+  
+  platform          String          // FACEBOOK, INSTAGRAM, TIKTOK
+  headline          String?
+  hook              String?
+  caption           String
+  cta               String?
+  hashtags          String?
+  
+  onScreenText      String?         // for TikTok video overlay
+  videoIdea         String?         // for TikTok production brief
+  platformNotes     String?
+  mediaSelection    String          @default("[]") // JSON array of media URLs
+  
+  language          String          @default("English") // English, Bahasa Malaysia, Chinese, English + Chinese, English + BM
+  generationStatus  String          @default("IDLE") // IDLE, GENERATING, GENERATED, FAILED
+  approvalStatus    String          @default("PENDING") // PENDING, APPROVED, REJECTED, CHANGES_REQUESTED
+  
+  versionNumber     Int             @default(1)
+  isEditedManually  Boolean         @default(false)
+  
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+
+  versions          ContentVersion[]
+
+  @@index([contentItemId])
+  @@index([clientId])
+  @@index([platform])
+}
+
+model ContentVersion {
+  id                String          @id @default(cuid())
+  organizationId    String?
+  clientId          String
+  client            Client          @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  contentItemId     String
+  contentItem       ContentItem     @relation(fields: [contentItemId], references: [id], onDelete: Cascade)
+  postVariantId     String?
+  postVariant       PostVariant?    @relation(fields: [postVariantId], references: [id], onDelete: SetNull)
+  
+  versionNumber     Int
+  contentSnapshot   String          // JSON snapshot of content and platform variant copy
+  changeSummary     String?
+  
+  createdBy         String
+  createdAt         DateTime        @default(now())
+
+  @@index([contentItemId])
+  @@index([postVariantId])
+  @@index([clientId])
+}
+
+model ApprovalRequest {
+  id                String          @id @default(cuid())
+  organizationId    String?
+  clientId          String
+  client            Client          @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  contentItemId     String
+  contentItem       ContentItem     @relation(fields: [contentItemId], references: [id], onDelete: Cascade)
+  
+  platformScope     String          @default("ALL") // ALL, FACEBOOK, INSTAGRAM, TIKTOK
+  requestedBy       String
+  assignedApprover  String?
+  status            String          @default("PENDING") // PENDING, APPROVED, REJECTED, CHANGES_REQUESTED
+  
+  submittedAt       DateTime        @default(now())
+  reviewedAt        DateTime?
+  reviewedBy        String?
+  reviewComment     String?
+
+  comments          ApprovalComment[]
+
+  @@index([contentItemId])
+  @@index([clientId])
+  @@index([status])
+}
+
+model ApprovalComment {
+  id                String          @id @default(cuid())
+  organizationId    String?
+  clientId          String
+  approvalRequestId String
+  approvalRequest   ApprovalRequest @relation(fields: [approvalRequestId], references: [id], onDelete: Cascade)
+  
+  userId            String
+  userName          String
+  comment           String
+  createdAt         DateTime        @default(now())
+
+  @@index([approvalRequestId])
+  @@index([clientId])
+}
+
+model ClientReferenceAsset {
+  id                  String        @id @default(cuid())
+  organizationId      String?
+  clientId            String
+  client              Client        @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  
+  name                String
+  type                String        // PDF, BROCHURE, PRODUCT_SHEET, BRAND_GUIDE
+  fileUrl             String
+  purpose             String?
+  isAiApprovedSource  Boolean       @default(true)
+  
+  uploadedBy          String        @default("Agency Team")
+  createdAt           DateTime      @default(now())
+
+  @@index([clientId])
+}
+
+model AiGenerationLog {
+  id                  String        @id @default(cuid())
+  organizationId      String?
+  clientId            String
+  client              Client        @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  contentItemId       String?
+  contentItem         ContentItem?  @relation(fields: [contentItemId], references: [id], onDelete: SetNull)
+  
+  provider            String        @default("GEMINI")
+  model               String        @default("gemini-2.5-flash")
+  action              String        // GENERATE_ALL, GENERATE_SINGLE, REWRITE, QUALITY_CHECK
+  sourceContextIds    String?       // JSON array of service/pillar/reference asset IDs used
+  promptVersion       String        @default("content-v1")
+  
+  inputTokens         Int           @default(0)
+  outputTokens        Int           @default(0)
+  
+  createdBy           String
+  createdAt           DateTime      @default(now())
+
+  @@index([clientId])
+  @@index([contentItemId])
 }
 
 model MediaAsset {

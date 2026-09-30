@@ -201,7 +201,7 @@ export default function ClientOverviewPage() {
               </Link>
             </div>
 
-            <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-5">
+            <div className="mt-4 grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-6">
               <div className="rounded-xl border border-slate-100 bg-slate-50/80 p-3 text-center">
                 <span className="block text-2xl font-bold text-slate-900">
                   {contentStats.drafts}
@@ -213,14 +213,21 @@ export default function ClientOverviewPage() {
                 <span className="block text-2xl font-bold text-amber-700">
                   {contentStats.pendingApproval}
                 </span>
-                <span className="text-[11px] font-semibold text-amber-600">Pending Approval</span>
+                <span className="text-[11px] font-semibold text-amber-600">Pending</span>
               </div>
 
-              <div className="rounded-xl border border-blue-100 bg-blue-50/50 p-3 text-center">
-                <span className="block text-2xl font-bold text-blue-700">
+              <div className="rounded-xl border border-rose-100 bg-rose-50/50 p-3 text-center">
+                <span className="block text-2xl font-bold text-rose-700">
+                  {contentStats.changesRequested || 0}
+                </span>
+                <span className="text-[11px] font-semibold text-rose-600">Changes Req.</span>
+              </div>
+
+              <div className="rounded-xl border border-teal-100 bg-teal-50/50 p-3 text-center">
+                <span className="block text-2xl font-bold text-teal-700">
                   {contentStats.approved}
                 </span>
-                <span className="text-[11px] font-semibold text-blue-600">Approved</span>
+                <span className="text-[11px] font-semibold text-teal-600">Approved</span>
               </div>
 
               <div className="rounded-xl border border-indigo-100 bg-indigo-50/50 p-3 text-center">

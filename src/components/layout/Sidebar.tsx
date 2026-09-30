@@ -138,13 +138,31 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
               href="/clients"
               onClick={handleLinkClick}
               className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-medium transition-colors ${
-                pathname.startsWith("/clients")
+                pathname.startsWith("/clients") && !pathname.includes("/content/")
                   ? "bg-blue-600 text-white font-semibold shadow-xs"
                   : "text-slate-300 hover:bg-slate-800 hover:text-white"
               }`}
             >
               <Building2 className="h-4 w-4" />
               <span>Clients</span>
+            </Link>
+
+            <Link
+              href="/approvals"
+              onClick={handleLinkClick}
+              className={`flex items-center justify-between rounded-lg px-3 py-2 text-xs font-medium transition-colors ${
+                pathname === "/approvals"
+                  ? "bg-blue-600 text-white font-semibold shadow-xs"
+                  : "text-slate-300 hover:bg-slate-800 hover:text-white"
+              }`}
+            >
+              <div className="flex items-center gap-2.5">
+                <FileText className="h-4 w-4" />
+                <span>Approval Center</span>
+              </div>
+              <span className="rounded-full bg-purple-500/20 px-1.5 py-0.5 text-[9px] font-semibold text-purple-300">
+                Phase 4
+              </span>
             </Link>
           </div>
         )}
