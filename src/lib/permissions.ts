@@ -17,6 +17,8 @@ export type Permission =
   | "media:upload"
   | "media:delete"
   | "leads:view"
+  | "social_accounts:view"
+  | "social_accounts:manage"
   | "settings:manage";
 
 const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
@@ -37,6 +39,8 @@ const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     "media:upload",
     "media:delete",
     "leads:view",
+    "social_accounts:view",
+    "social_accounts:manage",
     "settings:manage",
   ],
   ADMIN: [
@@ -54,6 +58,8 @@ const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     "media:upload",
     "media:delete",
     "leads:view",
+    "social_accounts:view",
+    "social_accounts:manage",
     "settings:manage",
   ],
   ACCOUNT_MANAGER: [
@@ -68,6 +74,8 @@ const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     "media:upload",
     "media:delete",
     "leads:view",
+    "social_accounts:view",
+    "social_accounts:manage",
   ],
   CONTENT_CREATOR: [
     "client:view",
@@ -76,21 +84,25 @@ const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     "content:edit",
     "media:view",
     "media:upload",
+    "social_accounts:view",
   ],
   APPROVER: [
     "client:view",
     "content:view",
     "content:approve",
     "media:view",
+    "social_accounts:view",
   ],
   SALES: [
     "client:view",
     "leads:view",
+    "social_accounts:view",
   ],
   VIEWER: [
     "client:view",
     "content:view",
     "media:view",
+    "social_accounts:view",
   ],
 };
 

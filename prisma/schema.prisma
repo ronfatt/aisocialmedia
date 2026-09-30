@@ -277,25 +277,44 @@ model ContentPillar {
 // ----------------------------------------------------
 
 model SocialAccount {
-  id                     String           @id @default(cuid())
-  clientId               String
-  client                 Client           @relation(fields: [clientId], references: [id], onDelete: Cascade)
-  platform               String           // FACEBOOK, INSTAGRAM, TIKTOK
-  platformAccountId      String?
-  displayName            String?          // e.g. "UXUI Holdings Official"
-  connectionStatus       String           @default("PENDING_INTEGRATION") // CONNECTED, DISCONNECTED, PENDING_INTEGRATION, EXPIRED
+  id                         String           @id @default(cuid())
+  organizationId             String?
+  clientId                   String
+  client                     Client           @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  
+  platform                   String           // FACEBOOK, INSTAGRAM, TIKTOK
+  provider                   String           @default("META") // META, TIKTOK
+  
+  platformAccountId          String?          // Page ID or Instagram Account ID
+  platformParentAccountId    String?          // e.g. Linked Facebook Page ID for Instagram
+  
+  displayName                String?          // e.g. "UXUI Holdings Official"
+  username                   String?          // e.g. "@uxuiholdings"
+  profileImageUrl            String?
+  
+  connectionStatus           String           @default("NOT_CONNECTED") // NOT_CONNECTED, CONNECTING, CONNECTED, TOKEN_EXPIRED, PERMISSION_ERROR, REAUTH_REQUIRED, DISCONNECTED, ERROR
+  accountType                String?          // PAGE, BUSINESS, CREATOR
+  isPrimary                  Boolean          @default(true)
   
   // Encrypted at rest (AES-256-GCM) - Never returned to browser client
-  accessTokenEncrypted   String?
-  refreshTokenEncrypted  String?
-  tokenExpiry            DateTime?
+  accessTokenEncrypted       String?
+  refreshTokenEncrypted      String?
+  tokenExpiresAt             DateTime?
   
-  metadata               String?          // JSON metadata e.g. follower count, handle
-  createdAt              DateTime         @default(now())
-  updatedAt              DateTime         @updatedAt
+  permissionsGranted         String?          // JSON array of granted permission strings
+  providerMetadata           String?          // JSON metadata e.g. tasks, category, ig_id
+  
+  connectedBy                String?          // Name of the user who authorized
+  connectedAt                DateTime?
+  lastVerifiedAt             DateTime?
+  
+  createdAt                  DateTime         @default(now())
+  updatedAt                  DateTime         @updatedAt
 
-  @@unique([clientId, platform])
   @@index([clientId])
+  @@index([platform])
+  @@index([platformAccountId])
+  @@index([organizationId])
 }
 
 // ----------------------------------------------------

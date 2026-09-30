@@ -1,5 +1,50 @@
 import { PlatformType, ConnectionStatus } from "@/types";
 
+export type MetaPlatformType = "FACEBOOK" | "INSTAGRAM";
+
+export interface DiscoveredAccount {
+  id: string; // Facebook Page ID or Instagram Business Account ID
+  parentAccountId?: string; // Linked Facebook Page ID for Instagram
+  name: string;
+  username?: string;
+  profilePictureUrl?: string;
+  category?: string;
+  accountType: "PAGE" | "BUSINESS" | "CREATOR";
+  platform: MetaPlatformType;
+  tasks?: string[];
+  permissions?: string[];
+  accessToken: string; // Handled strictly server-side, encrypted on selection
+}
+
+export interface ConnectionVerificationResult {
+  healthy: boolean;
+  status: "CONNECTED" | "TOKEN_EXPIRED" | "PERMISSION_ERROR" | "REAUTH_REQUIRED" | "ERROR";
+  message: string;
+  accountName?: string;
+  username?: string;
+  permissionsSummary?: {
+    pageAccess: boolean;
+    publishing: boolean;
+    insights: boolean;
+  };
+  lastVerifiedAt: Date;
+}
+
+export interface OAuthInitResult {
+  authUrl: string;
+  state: string;
+  platform: MetaPlatformType;
+}
+
+export interface DiscoveredSessionData {
+  userId: string;
+  organizationId: string;
+  clientId: string;
+  platform: MetaPlatformType;
+  accounts: DiscoveredAccount[];
+  createdAt: number;
+}
+
 export interface ProviderAuthResult {
   success: boolean;
   message: string;

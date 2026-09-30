@@ -156,7 +156,9 @@ export default function ClientOverviewPage() {
                           {pName.toLowerCase()}
                         </p>
                         <p className="text-[10px] text-slate-400">
-                          {acct?.displayName || "Official Brand Account"}
+                          {isConnected
+                            ? acct?.username || acct?.displayName
+                            : "Channel Not Connected"}
                         </p>
                       </div>
                     </div>

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { assertClientAccess, requireUser } from "@/lib/auth";
-import { socialProviders } from "@/lib/social";
+import { requirePermission } from "@/lib/auth";
+import { MetaProvider } from "@/lib/social/MetaProvider";
 
 export async function GET(
   req: Request,
@@ -9,10 +9,7 @@ export async function GET(
 ) {
   try {
     const { clientId } = await params;
-    const auth = await assertClientAccess(clientId);
-    if (!auth.allowed) {
-      return NextResponse.json({ error: auth.error }, { status: 403 });
-    }
+    await requirePermission(clientId, "social_accounts:view");
 
     const accounts = await db.socialAccount.findMany({
       where: { clientId },
@@ -20,100 +17,49 @@ export async function GET(
         id: true,
         platform: true,
         displayName: true,
+        username: true,
+        profileImageUrl: true,
+        platformAccountId: true,
+        platformParentAccountId: true,
         connectionStatus: true,
-        tokenExpiry: true,
+        accountType: true,
+        isPrimary: true,
+        permissionsGranted: true,
+        providerMetadata: true,
+        connectedBy: true,
+        connectedAt: true,
+        lastVerifiedAt: true,
+        createdAt: true,
         updatedAt: true,
-        // Notice: accessTokenEncrypted and refreshTokenEncrypted are strictly omitted!
+        // STRICT SECURITY: accessTokenEncrypted and refreshTokenEncrypted are NEVER selected or leaked
       },
     });
+
+    const isMetaConfigured = MetaProvider.isConfigured();
 
     const platforms = ["FACEBOOK", "INSTAGRAM", "TIKTOK"] as const;
     const result = platforms.map((p) => {
       const found = accounts.find((a) => a.platform === p);
-      const provider = socialProviders[p];
       return {
+        id: found?.id || `stub-${p.toLowerCase()}`,
         platform: p,
-        displayName: found?.displayName || provider.displayName,
-        connectionStatus: found?.connectionStatus || "PENDING_INTEGRATION",
-        requiredScopes: provider.requiredScopes,
-        updatedAt: found?.updatedAt || null,
+        displayName: found?.displayName || (p === "FACEBOOK" ? "Facebook Page" : p === "INSTAGRAM" ? "Instagram Professional" : "TikTok for Business"),
+        username: found?.username || null,
+        profileImageUrl: found?.profileImageUrl || null,
+        platformAccountId: found?.platformAccountId || null,
+        connectionStatus: found?.connectionStatus || "NOT_CONNECTED",
+        accountType: found?.accountType || (p === "FACEBOOK" ? "PAGE" : p === "INSTAGRAM" ? "BUSINESS" : "BUSINESS"),
+        permissionsGranted: found?.permissionsGranted ? JSON.parse(found.permissionsGranted) : [],
+        connectedBy: found?.connectedBy || null,
+        connectedAt: found?.connectedAt || null,
+        lastVerifiedAt: found?.lastVerifiedAt || null,
+        isConfigured: p === "TIKTOK" ? false : isMetaConfigured,
       };
     });
 
-    return NextResponse.json({ accounts: result });
-  } catch (error) {
-    console.error("GET /api/clients/[clientId]/social-accounts error:", error);
-    return NextResponse.json({ error: "Failed to fetch social accounts" }, { status: 500 });
-  }
-}
-
-export async function POST(
-  req: Request,
-  { params }: { params: Promise<{ clientId: string }> }
-) {
-  try {
-    const { clientId } = await params;
-    const auth = await assertClientAccess(clientId);
-    if (!auth.allowed) {
-      return NextResponse.json({ error: auth.error }, { status: 403 });
-    }
-
-    const user = await requireUser();
-    const body = await req.json();
-    const { platform, action, accountName } = body; // action: "toggle" or "disconnect"
-
-    const existing = await db.socialAccount.findUnique({
-      where: {
-        clientId_platform: {
-          clientId,
-          platform,
-        },
-      },
-    });
-
-    let newStatus = "CONNECTED";
-    if (existing?.connectionStatus === "CONNECTED") {
-      newStatus = "PENDING_INTEGRATION";
-    }
-
-    const updated = await db.socialAccount.upsert({
-      where: {
-        clientId_platform: {
-          clientId,
-          platform,
-        },
-      },
-      update: {
-        connectionStatus: newStatus,
-        displayName: newStatus === "CONNECTED" ? accountName || `${platform} Connected Channel` : "",
-      },
-      create: {
-        clientId,
-        platform,
-        connectionStatus: newStatus,
-        displayName: accountName || `${platform} Connected Channel`,
-      },
-    });
-
-    await db.activityLog.create({
-      data: {
-        clientId,
-        userId: user.id,
-        action: newStatus === "CONNECTED" ? "SOCIAL_ACCOUNT_CONNECTED" : "SOCIAL_ACCOUNT_DISCONNECTED",
-        description: `${platform} connection status updated to ${newStatus} by ${user.name}.`,
-      },
-    });
-
-    return NextResponse.json({
-      success: true,
-      account: {
-        platform: updated.platform,
-        displayName: updated.displayName,
-        connectionStatus: updated.connectionStatus,
-      },
-    });
-  } catch (error) {
-    console.error("POST /api/clients/[clientId]/social-accounts error:", error);
-    return NextResponse.json({ error: "Failed to update social account" }, { status: 500 });
+    return NextResponse.json({ accounts: result, isMetaConfigured });
+  } catch (error: any) {
+    const status = error.message?.startsWith("403") ? 403 : error.message?.startsWith("401") ? 401 : 500;
+    return NextResponse.json({ error: error.message || "Failed to fetch social accounts" }, { status });
   }
 }
