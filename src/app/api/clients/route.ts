@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { getCurrentUser } from "@/lib/auth";
+import { requireUser } from "@/lib/auth";
 
 export async function GET() {
   try {
-    const user = await getCurrentUser();
+    const user = await requireUser();
 
     // Multi-tenant isolation:
     // Admin/Owner sees all clients in their organization.
@@ -74,7 +74,7 @@ export async function GET() {
 
 export async function POST(req: Request) {
   try {
-    const user = await getCurrentUser();
+    const user = await requireUser();
     const body = await req.json();
 
     const {

@@ -13,42 +13,30 @@ export abstract class BaseProvider implements ISocialProvider {
   abstract readonly requiredScopes: string[];
 
   async connect(clientId: string, redirectUri?: string): Promise<ProviderAuthResult> {
-    // In Phase 1: Real OAuth is pending integration
-    return {
-      success: false,
-      message: `OAuth integration for ${this.displayName} is pending. Real API credentials will be configured in Phase 2.`,
-      connectionStatus: "PENDING_INTEGRATION",
-    };
+    throw new Error(`[${this.displayName}] connect: NotImplemented. Integration will be enabled in the Social API phase.`);
   }
 
   async disconnect(clientId: string): Promise<boolean> {
-    return true;
+    throw new Error(`[${this.displayName}] disconnect: NotImplemented`);
   }
 
   async refreshToken(clientId: string): Promise<boolean> {
-    throw new Error(`[${this.displayName}] refreshToken: Integration Pending`);
+    throw new Error(`[${this.displayName}] refreshToken: NotImplemented`);
   }
 
   async publishPost(clientId: string, payload: PostPublishPayload): Promise<ProviderPostResult> {
-    return {
-      success: false,
-      errorMessage: `[${this.displayName}] publishPost: Integration Pending. Scheduled for Phase 2.`,
-    };
+    throw new Error(`[${this.displayName}] publishPost: NotImplemented`);
   }
 
   async getPosts(clientId: string, limit: number = 10): Promise<any[]> {
-    return [];
+    throw new Error(`[${this.displayName}] getPosts: NotImplemented`);
   }
 
   async getComments(clientId: string, postId: string): Promise<any[]> {
-    return [];
+    throw new Error(`[${this.displayName}] getComments: NotImplemented`);
   }
 
   async getAnalytics(clientId: string, periodDays: number = 30): Promise<any> {
-    return {
-      periodDays,
-      status: "Integration Pending",
-      metrics: null,
-    };
+    throw new Error(`[${this.displayName}] getAnalytics: NotImplemented`);
   }
 }

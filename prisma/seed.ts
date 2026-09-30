@@ -3,7 +3,7 @@ import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log("Seeding database with multi-tenant data...");
+  console.log("Seeding Phase 2 database with full multi-tenant structure and roles...");
 
   // Clear existing data
   await prisma.activityLog.deleteMany();
@@ -22,10 +22,11 @@ async function main() {
   await prisma.clientProfile.deleteMany();
   await prisma.clientMember.deleteMany();
   await prisma.client.deleteMany();
+  await prisma.organizationMember.deleteMany();
   await prisma.user.deleteMany();
   await prisma.organization.deleteMany();
 
-  // 1. Create Organization
+  // 1. Create Organization (Agency)
   const org = await prisma.organization.create({
     data: {
       name: "Apex Digital Media Agency",
@@ -34,41 +35,84 @@ async function main() {
     },
   });
 
-  // 2. Create Users with different roles & assignments
-  const adminUser = await prisma.user.create({
-    data: {
-      organizationId: org.id,
+  // 2. Create Agency Users across all required roles
+  const usersData = [
+    {
       email: "sarah.chen@apexmedia.io",
       name: "Sarah Chen",
-      role: "ADMIN",
-      passwordHash: "mock_hash_admin",
+      role: "OWNER",
+      passwordHash: "password123",
       avatarUrl: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=120&h=120&fit=crop&crop=face",
     },
-  });
-
-  const accountManagerA = await prisma.user.create({
-    data: {
-      organizationId: org.id,
+    {
       email: "marcus.wong@apexmedia.io",
       name: "Marcus Wong",
       role: "ACCOUNT_MANAGER",
-      passwordHash: "mock_hash_marcus",
+      passwordHash: "password123",
       avatarUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&h=120&fit=crop&crop=face",
     },
-  });
-
-  const accountManagerB = await prisma.user.create({
-    data: {
-      organizationId: org.id,
+    {
       email: "aisha.rahman@apexmedia.io",
       name: "Aisha Rahman",
       role: "ACCOUNT_MANAGER",
-      passwordHash: "mock_hash_aisha",
+      passwordHash: "password123",
       avatarUrl: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&h=120&fit=crop&crop=face",
     },
-  });
+    {
+      email: "david.tan@apexmedia.io",
+      name: "David Tan",
+      role: "CONTENT_CREATOR",
+      passwordHash: "password123",
+      avatarUrl: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=120&h=120&fit=crop&crop=face",
+    },
+    {
+      email: "elena.gomez@apexmedia.io",
+      name: "Elena Gomez",
+      role: "APPROVER",
+      passwordHash: "password123",
+      avatarUrl: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=120&h=120&fit=crop&crop=face",
+    },
+    {
+      email: "kevin.lee@apexmedia.io",
+      name: "Kevin Lee",
+      role: "SALES",
+      passwordHash: "password123",
+      avatarUrl: "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=120&h=120&fit=crop&crop=face",
+    },
+    {
+      email: "rachel.adams@apexmedia.io",
+      name: "Rachel Adams",
+      role: "VIEWER",
+      passwordHash: "password123",
+      avatarUrl: "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=120&h=120&fit=crop&crop=face",
+    },
+  ];
 
-  // 3. Client 1: UXUI HOLDINGS (Industrial / Metal Fabrication)
+  const createdUsers: Record<string, any> = {};
+  for (const u of usersData) {
+    const user = await prisma.user.create({
+      data: {
+        organizationId: org.id,
+        email: u.email,
+        name: u.name,
+        role: u.role,
+        passwordHash: u.passwordHash,
+        avatarUrl: u.avatarUrl,
+      },
+    });
+    createdUsers[u.email] = user;
+
+    // Create OrganizationMember link
+    await prisma.organizationMember.create({
+      data: {
+        organizationId: org.id,
+        userId: user.id,
+        role: u.role,
+      },
+    });
+  }
+
+  // 3. Client 1: UXUI HOLDINGS
   const clientUxui = await prisma.client.create({
     data: {
       organizationId: org.id,
@@ -80,21 +124,26 @@ async function main() {
       locationState: "Selangor",
       locationCountry: "Malaysia",
       status: "ACTIVE",
-      accountManagerId: accountManagerA.id,
-      accountManagerName: accountManagerA.name,
+      accountManagerId: createdUsers["marcus.wong@apexmedia.io"].id,
+      accountManagerName: "Marcus Wong",
       logoUrl: "https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=160&h=160&fit=crop",
     },
   });
 
-  // Client 1 Members
+  // Client 1 Members (Owner Sarah, AM Marcus, Creator David, Approver Elena, Sales Kevin, Viewer Rachel)
   await prisma.clientMember.createMany({
     data: [
-      { clientId: clientUxui.id, userId: adminUser.id, role: "ADMIN" },
-      { clientId: clientUxui.id, userId: accountManagerA.id, role: "ACCOUNT_MANAGER" },
+      { clientId: clientUxui.id, userId: createdUsers["sarah.chen@apexmedia.io"].id, role: "OWNER" },
+      { clientId: clientUxui.id, userId: createdUsers["marcus.wong@apexmedia.io"].id, role: "ACCOUNT_MANAGER" },
+      { clientId: clientUxui.id, userId: createdUsers["david.tan@apexmedia.io"].id, role: "CONTENT_CREATOR" },
+      { clientId: clientUxui.id, userId: createdUsers["elena.gomez@apexmedia.io"].id, role: "APPROVER" },
+      { clientId: clientUxui.id, userId: createdUsers["kevin.lee@apexmedia.io"].id, role: "SALES" },
+      { clientId: clientUxui.id, userId: createdUsers["rachel.adams@apexmedia.io"].id, role: "VIEWER" },
+      // Notice: Aisha Rahman (AM B) is strictly NOT in UXUI Holdings
     ],
   });
 
-  // Client 1 Profile (Section A)
+  // Client 1 Profile
   await prisma.clientProfile.create({
     data: {
       clientId: clientUxui.id,
@@ -111,7 +160,7 @@ async function main() {
     },
   });
 
-  // Client 1 Services (Section B)
+  // Client 1 Services
   await prisma.clientService.createMany({
     data: [
       {
@@ -147,7 +196,7 @@ async function main() {
     ],
   });
 
-  // Client 1 Target Market (Section C)
+  // Client 1 Target Market
   await prisma.clientTargetMarket.create({
     data: {
       clientId: clientUxui.id,
@@ -161,7 +210,7 @@ async function main() {
     },
   });
 
-  // Client 1 Brand Profile (Section D)
+  // Client 1 Brand Profile
   await prisma.clientBrandProfile.create({
     data: {
       clientId: clientUxui.id,
@@ -177,7 +226,7 @@ async function main() {
     },
   });
 
-  // Client 1 Marketing Objectives (Section E)
+  // Client 1 Marketing Objectives
   await prisma.clientMarketingObjective.createMany({
     data: [
       { clientId: clientUxui.id, title: "Generate qualified B2B WhatsApp engineering inquiries", priority: 1, isCompleted: false },
@@ -187,7 +236,7 @@ async function main() {
     ],
   });
 
-  // Client 1 Competitors (Section F)
+  // Client 1 Competitors
   await prisma.clientCompetitor.createMany({
     data: [
       {
@@ -211,7 +260,7 @@ async function main() {
     ],
   });
 
-  // Client 1 Notes (Section G)
+  // Client 1 Notes
   await prisma.clientNote.createMany({
     data: [
       {
@@ -229,7 +278,7 @@ async function main() {
     ],
   });
 
-  // Client 1 Strategy (Section 5)
+  // Client 1 Strategy
   const strategyUxui = await prisma.clientStrategy.create({
     data: {
       clientId: clientUxui.id,
@@ -249,19 +298,19 @@ async function main() {
     },
   });
 
-  // Client 1 Content Pillars
+  // Content Pillars
   await prisma.contentPillar.createMany({
     data: [
-      { strategyId: strategyUxui.id, title: "Laser Cutting Capability", description: "Close-up cut precision, thickness capabilities, edge smoothness", orderIndex: 1 },
-      { strategyId: strategyUxui.id, title: "CNC Machining & Tooling", description: "Complex geometry milling and dimensional inspection verification", orderIndex: 2 },
-      { strategyId: strategyUxui.id, title: "Factory Capability & Safety", description: "Overhead crane capacities, welding bays, ISO quality checks", orderIndex: 3 },
-      { strategyId: strategyUxui.id, title: "Completed Case Studies", description: "Before-and-after fabrication showcases, client structural frameworks", orderIndex: 4 },
-      { strategyId: strategyUxui.id, title: "Engineering Education", description: "Guide on sheet metal tolerances, welding defects, material selection", orderIndex: 5 },
-      { strategyId: strategyUxui.id, title: "Customer Problem / Solution", description: "Solving tight lead times and complex fabrication headaches", orderIndex: 6 },
+      { strategyId: strategyUxui.id, title: "Laser Cutting Capability", description: "Close-up cut precision, thickness capabilities, edge smoothness", orderIndex: 1, isActive: true },
+      { strategyId: strategyUxui.id, title: "CNC Machining & Tooling", description: "Complex geometry milling and dimensional inspection verification", orderIndex: 2, isActive: true },
+      { strategyId: strategyUxui.id, title: "Factory Capability & Safety", description: "Overhead crane capacities, welding bays, ISO quality checks", orderIndex: 3, isActive: true },
+      { strategyId: strategyUxui.id, title: "Completed Case Studies", description: "Before-and-after fabrication showcases, client structural frameworks", orderIndex: 4, isActive: true },
+      { strategyId: strategyUxui.id, title: "Engineering Education", description: "Guide on sheet metal tolerances, welding defects, material selection", orderIndex: 5, isActive: true },
+      { strategyId: strategyUxui.id, title: "Customer Problem / Solution", description: "Solving tight lead times and complex fabrication headaches", orderIndex: 6, isActive: true },
     ],
   });
 
-  // Client 1 Social Accounts (Section 6)
+  // Social Accounts (Integration Pending)
   await prisma.socialAccount.createMany({
     data: [
       {
@@ -285,43 +334,88 @@ async function main() {
     ],
   });
 
-  // Client 1 Content Items
+  // Content Items
   await prisma.contentItem.createMany({
     data: [
       {
         clientId: clientUxui.id,
         title: "Cutting 25mm Stainless Steel with 12kW Fiber Laser",
-        bodyText: "Watch the clean edge on this 25mm Grade 316 stainless flange. Zero slag, zero dross. Ready for immediate welding without secondary grinding.",
+        description: "Watch the clean edge on this 25mm Grade 316 stainless flange. Zero slag, zero dross. Ready for immediate welding without secondary grinding.",
+        contentPillar: "Laser Cutting Capability",
         status: "SCHEDULED",
-        scheduledFor: new Date(Date.now() + 86400000 * 2), // 2 days from now
+        scheduledFor: new Date(Date.now() + 86400000 * 2),
         platforms: JSON.stringify(["FACEBOOK", "TIKTOK"]),
+        createdBy: "David Tan",
+        internalNotes: "Verified with welding dept: no slag left.",
       },
       {
         clientId: clientUxui.id,
         title: "How to Avoid Warping in Heavy Sheet Metal Bending",
-        bodyText: "Engineering tip: When working with high-tensile steel, springback calculation is crucial. Here is how our CNC press brake automatically compensates.",
+        description: "Engineering tip: When working with high-tensile steel, springback calculation is crucial. Here is how our CNC press brake automatically compensates.",
+        contentPillar: "Engineering Education",
         status: "PENDING_APPROVAL",
         platforms: JSON.stringify(["FACEBOOK", "INSTAGRAM"]),
+        createdBy: "David Tan",
       },
       {
         clientId: clientUxui.id,
         title: "Factory Walkthrough: Behind our 30,000 sqft Klang Facility",
-        bodyText: "From raw steel plate intake to final CMM inspection, take a quick 45-second tour behind Malaysia's premier precision fabrication plant.",
+        description: "From raw steel plate intake to final CMM inspection, take a quick 45-second tour behind Malaysia's premier precision fabrication plant.",
+        contentPillar: "Factory Capability & Safety",
         status: "DRAFT",
         platforms: JSON.stringify(["TIKTOK", "INSTAGRAM"]),
+        createdBy: "David Tan",
       },
       {
         clientId: clientUxui.id,
         title: "Completed Project: Skid Base for Marine Generator",
-        bodyText: "Delivered on time for a Singapore offshore contractor. Full magnetic particle inspection passed on all critical welds.",
+        description: "Delivered on time for a Singapore offshore contractor. Full magnetic particle inspection passed on all critical welds.",
+        contentPillar: "Completed Case Studies",
         status: "PUBLISHED",
         publishedAt: new Date(Date.now() - 86400000 * 3),
         platforms: JSON.stringify(["FACEBOOK"]),
+        createdBy: "Marcus Wong",
       },
     ],
   });
 
-  // 4. Client 2: ABC FOOD MACHINERY (Food Machinery)
+  // Media Assets for UXUI Holdings
+  await prisma.mediaAsset.createMany({
+    data: [
+      {
+        clientId: clientUxui.id,
+        fileName: "Laser-Head-Sparks-Macro.jpg",
+        fileUrl: "https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=800&fit=crop",
+        fileType: "image/jpeg",
+        fileSize: 2450000,
+        category: "Images",
+        tags: JSON.stringify(["Laser", "Cutting", "Precision"]),
+        uploadedBy: "David Tan",
+      },
+      {
+        clientId: clientUxui.id,
+        fileName: "5-Axis-Machining-Impeller.mp4",
+        fileUrl: "https://images.unsplash.com/photo-1504917599217-d4dc5ebe6122?w=800&fit=crop",
+        fileType: "video/mp4",
+        fileSize: 18400000,
+        category: "Videos",
+        tags: JSON.stringify(["CNC", "Machining", "5Axis"]),
+        uploadedBy: "David Tan",
+      },
+      {
+        clientId: clientUxui.id,
+        fileName: "UXUI-Primary-Logo-Vector.pdf",
+        fileUrl: "https://images.unsplash.com/photo-1584727638096-042c45049ebe?w=800&fit=crop",
+        fileType: "application/pdf",
+        fileSize: 520000,
+        category: "Brand Assets",
+        tags: JSON.stringify(["Logo", "Brand Guide"]),
+        uploadedBy: "Marcus Wong",
+      },
+    ],
+  });
+
+  // 4. Client 2: ABC FOOD MACHINERY
   const clientAbc = await prisma.client.create({
     data: {
       organizationId: org.id,
@@ -333,16 +427,17 @@ async function main() {
       locationState: "Selangor",
       locationCountry: "Malaysia",
       status: "ACTIVE",
-      accountManagerId: accountManagerA.id,
-      accountManagerName: accountManagerA.name,
+      accountManagerId: createdUsers["marcus.wong@apexmedia.io"].id,
+      accountManagerName: "Marcus Wong",
       logoUrl: "https://images.unsplash.com/photo-1584727638096-042c45049ebe?w=160&h=160&fit=crop",
     },
   });
 
   await prisma.clientMember.createMany({
     data: [
-      { clientId: clientAbc.id, userId: adminUser.id, role: "ADMIN" },
-      { clientId: clientAbc.id, userId: accountManagerA.id, role: "ACCOUNT_MANAGER" },
+      { clientId: clientAbc.id, userId: createdUsers["sarah.chen@apexmedia.io"].id, role: "OWNER" },
+      { clientId: clientAbc.id, userId: createdUsers["marcus.wong@apexmedia.io"].id, role: "ACCOUNT_MANAGER" },
+      { clientId: clientAbc.id, userId: createdUsers["david.tan@apexmedia.io"].id, role: "CONTENT_CREATOR" },
     ],
   });
 
@@ -354,7 +449,6 @@ async function main() {
       phone: "+60 3-5511 2233",
       whatsapp: "+60 19-332 1100",
       email: "sales@abcfoodmachinery.example.com",
-      address: "Section 16, Industrial Estate",
       city: "Shah Alam",
       state: "Selangor",
       country: "Malaysia",
@@ -362,119 +456,15 @@ async function main() {
     },
   });
 
-  await prisma.clientService.createMany({
-    data: [
-      {
-        clientId: clientAbc.id,
-        name: "Sanitary Liquid Filling & Capping Lines",
-        category: "Food Packaging",
-        description: "Hygienic 316L CIP-cleanable rotary piston filling lines for chili pastes, sauces, and edible oils up to 120 bottles per minute.",
-        sellingPoints: JSON.stringify(["CIP clean-in-place ready", "High speed 120 bpm", "±0.5% fill accuracy"]),
-        targetCustomers: JSON.stringify(["Condiment factories", "Beverage producers", "Cosmetics manufacturers"]),
-        priceInfo: "Turnkey lines starting from RM 180,000",
-        isActive: true,
-      },
-      {
-        clientId: clientAbc.id,
-        name: "Industrial Retort Sterilization Autoclaves",
-        category: "Food Thermal Processing",
-        description: "DOSH-certified steam and water spray sterilizers for retort pouch ready-to-eat meals with F0 automated sterilization logging.",
-        sellingPoints: JSON.stringify(["DOSH certified pressure vessel", "F0 lethal thermal value auto-calculation", "Energy saving heat recovery"]),
-        targetCustomers: JSON.stringify(["Ready-to-eat food brands", "Canned food manufacturers", "Central kitchens"]),
-        priceInfo: "Available in 500L, 1000L, and 2500L capacities",
-        isActive: true,
-      },
-    ],
-  });
-
-  await prisma.clientTargetMarket.create({
-    data: {
-      clientId: clientAbc.id,
-      geographicTarget: "Malaysia, Indonesia, Thailand, Philippines",
-      industryTarget: "Food & Beverage Manufacturing, Commercial Bakeries, Central Kitchens",
-      customerType: "B2B",
-      languages: JSON.stringify(["English", "Bahasa Melayu"]),
-      ageRange: "30 - 65",
-      buyerPersona: "Plant managers, QA/QC directors, food technology heads, and F&B SME owners upgrading from manual filling to automated production lines.",
-      decisionMakers: JSON.stringify(["Managing Director", "Plant General Manager", "Head of Maintenance", "Head of Food Safety & QA"]),
-    },
-  });
-
-  await prisma.clientBrandProfile.create({
-    data: {
-      clientId: clientAbc.id,
-      brandPositioning: "Southeast Asia's reliable partner in hygienic food automation & retort technology.",
-      brandTone: "Trustworthy, Clean, Engineering-led, Consultative, Food-safety obsessed",
-      preferredLanguage: "English",
-      secondaryLanguage: "Bahasa Melayu",
-      visualStyle: "Ultra-clean stainless steel machinery, bright sterile food plant environments, graphic flow diagrams of automation lines.",
-      brandColours: JSON.stringify(["#0284C7", "#0F172A", "#10B981"]),
-      avoidedWords: JSON.stringify(["cheap", "untested", "experimental"]),
-      preferredCta: "Schedule a Live Demo at our Shah Alam Experience Centre",
-      companySlogan: "Safe Food. Smarter Automation.",
-    },
-  });
-
-  await prisma.clientMarketingObjective.createMany({
-    data: [
-      { clientId: clientAbc.id, title: "Promote new automated retort pouch line for ready-to-eat SMEs", priority: 1, isCompleted: false },
-      { clientId: clientAbc.id, title: "Collect 20+ inquiries monthly for high-speed liquid filling equipment", priority: 2, isCompleted: false },
-    ],
-  });
-
-  const strategyAbc = await prisma.clientStrategy.create({
-    data: {
-      clientId: clientAbc.id,
-      brandPositioning: "Turnkey food machinery engineering with guaranteed DOSH & GMP compliance.",
-      marketingObjectives: "Generate 20 qualified commercial leads per month from regional food manufacturers.",
-      targetAudience: "F&B factory owners and production engineers across ASEAN.",
-      targetLocations: "Malaysia, Singapore, Indonesia",
-      targetIndustries: "F&B, Sauces, Ready-to-eat meals, Dairy packaging",
-      mainProductsServices: "Sanitary Filling Lines, Retort Autoclaves, Conveyor Accumulation Systems",
-      keySellingPoints: "DOSH Certified, CIP Clean-in-Place, Local Service & Spare Parts in Shah Alam",
-      preferredPlatforms: JSON.stringify(["Facebook", "Instagram"]),
-      postingFrequency: "3 posts / week",
-      languageStrategy: "Bilingual English & Bahasa Melayu",
-      ctaStrategy: "Direct booking for Shah Alam showroom trial",
-      campaignPriorities: "RTE Ready-To-Eat pouch packaging showcase",
-      specialInstructions: "Highlight hygienic weld cleanliness and CIP test demos.",
-    },
-  });
-
-  await prisma.contentPillar.createMany({
-    data: [
-      { strategyId: strategyAbc.id, title: "Machinery in Action (Speed & Flow)", description: "High-speed bottling lines running at 100+ bpm", orderIndex: 1 },
-      { strategyId: strategyAbc.id, title: "DOSH & Food Safety Compliance", description: "Hygiene standards, 316L metallurgy, CIP sanitization", orderIndex: 2 },
-      { strategyId: strategyAbc.id, title: "Customer Success & ROI", description: "How an SME saved 8 workers and boosted capacity 400%", orderIndex: 3 },
-      { strategyId: strategyAbc.id, title: "Maintenance & Spare Parts Assurance", description: "Local Shah Alam engineering support team", orderIndex: 4 },
-    ],
-  });
-
-  // Client 2 Social Accounts: Facebook Connected, Instagram Connected, TikTok Not Connected
   await prisma.socialAccount.createMany({
     data: [
-      {
-        clientId: clientAbc.id,
-        platform: "FACEBOOK",
-        displayName: "ABC Food Machinery Asia",
-        connectionStatus: "CONNECTED",
-      },
-      {
-        clientId: clientAbc.id,
-        platform: "INSTAGRAM",
-        displayName: "abcfoodmachinery",
-        connectionStatus: "CONNECTED",
-      },
-      {
-        clientId: clientAbc.id,
-        platform: "TIKTOK",
-        displayName: "",
-        connectionStatus: "PENDING_INTEGRATION",
-      },
+      { clientId: clientAbc.id, platform: "FACEBOOK", displayName: "ABC Food Machinery Asia", connectionStatus: "PENDING_INTEGRATION" },
+      { clientId: clientAbc.id, platform: "INSTAGRAM", displayName: "abcfoodmachinery", connectionStatus: "PENDING_INTEGRATION" },
+      { clientId: clientAbc.id, platform: "TIKTOK", displayName: "", connectionStatus: "PENDING_INTEGRATION" },
     ],
   });
 
-  // 5. Client 3: XYZ ENGINEERING (Assigned ONLY to Aisha Rahman - to test client isolation)
+  // 5. Client 3: XYZ ENGINEERING (Assigned ONLY to Aisha Rahman)
   const clientXyz = await prisma.client.create({
     data: {
       organizationId: org.id,
@@ -486,17 +476,17 @@ async function main() {
       locationState: "Penang",
       locationCountry: "Malaysia",
       status: "ACTIVE",
-      accountManagerId: accountManagerB.id,
-      accountManagerName: accountManagerB.name,
+      accountManagerId: createdUsers["aisha.rahman@apexmedia.io"].id,
+      accountManagerName: "Aisha Rahman",
       logoUrl: "https://images.unsplash.com/photo-1504917599217-d4dc5ebe6122?w=160&h=160&fit=crop",
     },
   });
 
   await prisma.clientMember.createMany({
     data: [
-      { clientId: clientXyz.id, userId: adminUser.id, role: "ADMIN" },
-      { clientId: clientXyz.id, userId: accountManagerB.id, role: "ACCOUNT_MANAGER" },
-      // Notice: Marcus Wong (Account Manager A) is NOT in this client membership!
+      { clientId: clientXyz.id, userId: createdUsers["sarah.chen@apexmedia.io"].id, role: "OWNER" },
+      { clientId: clientXyz.id, userId: createdUsers["aisha.rahman@apexmedia.io"].id, role: "ACCOUNT_MANAGER" },
+      // Notice: Marcus Wong, David Tan, etc. are NOT in XYZ Engineering!
     ],
   });
 
@@ -508,7 +498,6 @@ async function main() {
       phone: "+60 4-644 1122",
       whatsapp: "+60 17-440 9988",
       email: "info@xyzengineering.example.com",
-      address: "Bayan Lepas Free Industrial Zone Phase 3",
       city: "Bayan Lepas",
       state: "Penang",
       country: "Malaysia",
@@ -518,28 +507,27 @@ async function main() {
 
   await prisma.socialAccount.createMany({
     data: [
-      {
-        clientId: clientXyz.id,
-        platform: "FACEBOOK",
-        displayName: "",
-        connectionStatus: "PENDING_INTEGRATION",
-      },
-      {
-        clientId: clientXyz.id,
-        platform: "INSTAGRAM",
-        displayName: "",
-        connectionStatus: "PENDING_INTEGRATION",
-      },
-      {
-        clientId: clientXyz.id,
-        platform: "TIKTOK",
-        displayName: "",
-        connectionStatus: "PENDING_INTEGRATION",
-      },
+      { clientId: clientXyz.id, platform: "FACEBOOK", displayName: "", connectionStatus: "PENDING_INTEGRATION" },
+      { clientId: clientXyz.id, platform: "INSTAGRAM", displayName: "", connectionStatus: "PENDING_INTEGRATION" },
+      { clientId: clientXyz.id, platform: "TIKTOK", displayName: "", connectionStatus: "PENDING_INTEGRATION" },
     ],
   });
 
-  // 6. Additional Clients to test filtering and large client base
+  // Client 3 Media (to test isolation: must not appear under Client 1 or 2!)
+  await prisma.mediaAsset.create({
+    data: {
+      clientId: clientXyz.id,
+      fileName: "XYZ-Semiconductor-Carbide-Die.png",
+      fileUrl: "https://images.unsplash.com/photo-1504917599217-d4dc5ebe6122?w=800&fit=crop",
+      fileType: "image/png",
+      fileSize: 1200000,
+      category: "Images",
+      tags: JSON.stringify(["Carbide", "Die", "XYZ"]),
+      uploadedBy: "Aisha Rahman",
+    },
+  });
+
+  // 6. Additional Clients to test filtering
   await prisma.client.create({
     data: {
       organizationId: org.id,
@@ -551,8 +539,8 @@ async function main() {
       locationState: "Johor",
       locationCountry: "Malaysia",
       status: "ONBOARDING",
-      accountManagerId: accountManagerA.id,
-      accountManagerName: accountManagerA.name,
+      accountManagerId: createdUsers["marcus.wong@apexmedia.io"].id,
+      accountManagerName: "Marcus Wong",
       logoUrl: "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?w=160&h=160&fit=crop",
     },
   });
@@ -568,37 +556,45 @@ async function main() {
       locationState: "Selangor",
       locationCountry: "Malaysia",
       status: "PAUSED",
-      accountManagerId: adminUser.id,
-      accountManagerName: adminUser.name,
+      accountManagerId: createdUsers["sarah.chen@apexmedia.io"].id,
+      accountManagerName: "Sarah Chen",
       logoUrl: "https://images.unsplash.com/photo-1509391365360-2e959784a276?w=160&h=160&fit=crop",
     },
   });
 
-  // Create initial activity logs
+  // Initial Activity Logs with full organizationId and entity metadata
   await prisma.activityLog.createMany({
     data: [
       {
+        organizationId: org.id,
         clientId: clientUxui.id,
-        userId: accountManagerA.id,
-        action: "CLIENT_WORKSPACE_INITIALIZED",
-        description: "UXUI Holdings workspace initialized with 6 content pillars and 3 core engineering services.",
+        userId: createdUsers["sarah.chen@apexmedia.io"].id,
+        action: "CLIENT_CREATED",
+        entityType: "CLIENT",
+        entityId: clientUxui.id,
+        description: "UXUI Holdings workspace initialized with multi-tenant isolation.",
       },
       {
+        organizationId: org.id,
         clientId: clientUxui.id,
-        userId: accountManagerA.id,
-        action: "CONTENT_SCHEDULED",
+        userId: createdUsers["marcus.wong@apexmedia.io"].id,
+        action: "PROFILE_UPDATED",
+        entityType: "PROFILE",
+        entityId: clientUxui.id,
+        description: "Master business profile & 3 core fabrication services updated.",
+      },
+      {
+        organizationId: org.id,
+        clientId: clientUxui.id,
+        userId: createdUsers["david.tan@apexmedia.io"].id,
+        action: "CONTENT_CREATED",
+        entityType: "CONTENT",
         description: "Scheduled 'Cutting 25mm Stainless Steel with 12kW Fiber Laser' for Facebook & TikTok.",
-      },
-      {
-        clientId: clientAbc.id,
-        userId: accountManagerA.id,
-        action: "SOCIAL_ACCOUNT_CONNECTED",
-        description: "Facebook Page 'ABC Food Machinery Asia' connected successfully.",
       },
     ],
   });
 
-  console.log("Database seeded successfully with multi-tenant structure!");
+  console.log("Database seeded successfully with all 7 roles and multi-client records!");
 }
 
 main()

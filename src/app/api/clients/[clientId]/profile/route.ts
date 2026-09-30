@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { assertClientAccess, getCurrentUser } from "@/lib/auth";
+import { assertClientAccess, requireUser } from "@/lib/auth";
 
 export async function GET(
   req: Request,
@@ -68,7 +68,7 @@ export async function PUT(
       return NextResponse.json({ error: auth.error }, { status: 403 });
     }
 
-    const user = await getCurrentUser();
+    const user = await requireUser();
     const body = await req.json();
     const {
       profile,

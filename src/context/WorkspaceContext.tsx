@@ -5,8 +5,9 @@ import { useRouter, usePathname } from "next/navigation";
 import { AuthenticatedUser, ClientListItem } from "@/types";
 
 interface WorkspaceContextType {
-  activeUser: AuthenticatedUser;
+  activeUser: AuthenticatedUser | null;
   setActiveUser: (user: AuthenticatedUser) => void;
+  logout: () => Promise<void>;
   clients: ClientListItem[];
   setClients: React.Dispatch<React.SetStateAction<ClientListItem[]>>;
   activeClient: ClientListItem | null;
@@ -28,26 +29,40 @@ export function WorkspaceProvider({
   initialUser,
 }: {
   children: React.ReactNode;
-  initialUser: AuthenticatedUser;
+  initialUser: AuthenticatedUser | null;
 }) {
   const router = useRouter();
   const pathname = usePathname();
 
-  const [activeUser, setActiveUserState] = useState<AuthenticatedUser>(initialUser);
+  const [activeUser, setActiveUserState] = useState<AuthenticatedUser | null>(initialUser);
   const [clients, setClients] = useState<ClientListItem[]>([]);
   const [activeClient, setActiveClient] = useState<ClientListItem | null>(null);
   const [isDirty, setIsDirty] = useState<boolean>(false);
   const [pendingClientId, setPendingClientId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
-  // Sync user in cookie for SSR consistency
-  const setActiveUser = (user: AuthenticatedUser) => {
+  // Sync user in cookie and reload for SSR consistency
+  const setActiveUser = async (user: AuthenticatedUser) => {
     setActiveUserState(user);
-    document.cookie = `scc_active_user=${user.email}; path=/; max-age=86400`;
-    router.refresh();
+    await fetch("/api/auth/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: user.email }),
+    });
+    window.location.reload();
+  };
+
+  const logout = async () => {
+    await fetch("/api/auth/logout", { method: "POST" });
+    setActiveUserState(null);
+    window.location.href = "/login";
   };
 
   const refreshClients = async () => {
+    if (!activeUser) {
+      setIsLoading(false);
+      return;
+    }
     setIsLoading(true);
     try {
       const res = await fetch("/api/clients");
@@ -64,7 +79,7 @@ export function WorkspaceProvider({
 
   useEffect(() => {
     refreshClients();
-  }, [activeUser.email]);
+  }, [activeUser?.email]);
 
   // Keep activeClient in sync with URL
   useEffect(() => {
@@ -76,7 +91,6 @@ export function WorkspaceProvider({
         setActiveClient(found);
       }
     } else if (pathname === "/clients" || pathname === "/clients/new") {
-      // At the agency level
       setActiveClient(null);
     }
   }, [pathname, clients]);
@@ -92,13 +106,15 @@ export function WorkspaceProvider({
   const executeSwitch = (clientId: string) => {
     setIsDirty(false);
     setPendingClientId(null);
+
+    // Calculate equivalent subpath (e.g. /clients/a/content -> /clients/b/content)
+    const match = pathname.match(/\/clients\/[^\/]+(\/.*)?$/);
+    const subpath = match && match[1] ? match[1] : "/overview";
+
     const target = clients.find((c) => c.id === clientId || c.slug === clientId);
-    if (target) {
-      setActiveClient(target);
-      router.push(`/clients/${target.id}/overview`);
-    } else {
-      router.push(`/clients/${clientId}/overview`);
-    }
+    const targetId = target ? target.id : clientId;
+
+    router.push(`/clients/${targetId}${subpath}`);
   };
 
   const confirmDiscardAndSwitch = () => {
@@ -116,6 +132,7 @@ export function WorkspaceProvider({
       value={{
         activeUser,
         setActiveUser,
+        logout,
         clients,
         setClients,
         activeClient,

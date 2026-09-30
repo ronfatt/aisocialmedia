@@ -369,17 +369,41 @@ export default function ClientProfilePage() {
               {services.map((service, idx) => (
                 <div
                   key={idx}
-                  className="rounded-xl border border-slate-200 bg-slate-50/50 p-4 space-y-3"
+                  className={`rounded-xl border p-4 space-y-3 transition-all ${
+                    service.isActive ? "border-slate-200 bg-slate-50/50" : "border-slate-200 bg-slate-100/50 opacity-60"
+                  }`}
                 >
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-slate-800">Service #{idx + 1}</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-bold text-slate-800">Service #{idx + 1}</span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          markDirty();
+                          const updated = [...services];
+                          updated[idx].isActive = !updated[idx].isActive;
+                          setServices(updated);
+                        }}
+                        className={`rounded-md px-2 py-0.5 text-[10px] font-bold cursor-pointer ${
+                          service.isActive
+                            ? "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-600/20"
+                            : "bg-slate-200 text-slate-600"
+                        }`}
+                      >
+                        {service.isActive ? "Active" : "Disabled"}
+                      </button>
+                    </div>
+
                     <button
                       type="button"
                       onClick={() => {
-                        markDirty();
-                        setServices(services.filter((_, i) => i !== idx));
+                        if (confirm(`Are you sure you want to delete service "${service.name || 'Service'}"?`)) {
+                          markDirty();
+                          setServices(services.filter((_, i) => i !== idx));
+                        }
                       }}
-                      className="text-slate-400 hover:text-red-600 transition-colors"
+                      className="text-slate-400 hover:text-red-600 transition-colors cursor-pointer"
+                      title="Delete Service"
                     >
                       <Trash2 className="h-4 w-4" />
                     </button>
@@ -437,7 +461,7 @@ export default function ClientProfilePage() {
                     />
                   </div>
 
-                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
                     <div>
                       <label className="block text-[11px] font-semibold text-slate-600">
                         Selling Points (comma-separated)
@@ -479,6 +503,23 @@ export default function ClientProfilePage() {
                             .split(",")
                             .map((s) => s.trim())
                             .filter(Boolean);
+                          setServices(updated);
+                        }}
+                        className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs focus:border-blue-500 focus:outline-hidden"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-semibold text-slate-600">
+                        Price Information
+                      </label>
+                      <input
+                        type="text"
+                        value={service.priceInfo || ""}
+                        placeholder="e.g. Quotation per drawing"
+                        onChange={(e) => {
+                          markDirty();
+                          const updated = [...services];
+                          updated[idx].priceInfo = e.target.value;
                           setServices(updated);
                         }}
                         className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs focus:border-blue-500 focus:outline-hidden"

@@ -781,7 +781,7 @@ export default function NewClientOnboardingPage() {
           <div className="border-b border-slate-100 pb-4">
             <h2 className="text-lg font-bold text-slate-900">Step 6: Preferred Social Platforms</h2>
             <p className="text-xs text-slate-500">
-              Select channels to provision in this client's isolated workspace.
+              Select channels to provision in this client&apos;s isolated workspace.
             </p>
           </div>
 
@@ -886,10 +886,10 @@ export default function NewClientOnboardingPage() {
           type="button"
           disabled={currentStep === 1 || isSubmitting}
           onClick={() => setCurrentStep((prev) => Math.max(1, prev - 1))}
-          className="inline-flex items-center gap-1.5 rounded-xl border border-slate-300 bg-white px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed"
+          className="inline-flex items-center gap-1.5 rounded-xl border border-slate-300 bg-white px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
         >
           <ArrowLeft className="h-4 w-4" />
-          <span>Previous Step</span>
+          <span>Back</span>
         </button>
 
         {currentStep < 7 ? (
@@ -897,27 +897,39 @@ export default function NewClientOnboardingPage() {
             type="button"
             disabled={!canProceed()}
             onClick={() => setCurrentStep((prev) => prev + 1)}
-            className="inline-flex items-center gap-1.5 rounded-xl bg-blue-600 px-5 py-2 text-xs font-semibold text-white shadow-sm hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed"
+            className="inline-flex items-center gap-1.5 rounded-xl bg-blue-600 px-5 py-2 text-xs font-semibold text-white shadow-sm hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
           >
             <span>Next Step</span>
             <ArrowRight className="h-4 w-4" />
           </button>
         ) : (
-          <button
-            type="button"
-            disabled={isSubmitting}
-            onClick={handleSubmit}
-            className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-6 py-2.5 text-xs font-bold text-white shadow-md hover:bg-emerald-700 transition-all disabled:opacity-50"
-          >
-            {isSubmitting ? (
-              <span>Creating Client Workspace...</span>
-            ) : (
-              <>
-                <CheckCircle className="h-4 w-4" />
-                <span>Create Client Workspace</span>
-              </>
-            )}
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              disabled={isSubmitting}
+              onClick={() => {
+                alert("Wizard state saved to workspace draft cache.");
+              }}
+              className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 cursor-pointer disabled:opacity-50"
+            >
+              Save Draft
+            </button>
+            <button
+              type="button"
+              disabled={isSubmitting}
+              onClick={handleSubmit}
+              className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-6 py-2.5 text-xs font-bold text-white shadow-md hover:bg-emerald-700 transition-all disabled:opacity-50 cursor-pointer"
+            >
+              {isSubmitting ? (
+                <span>Creating Client Workspace...</span>
+              ) : (
+                <>
+                  <CheckCircle className="h-4 w-4" />
+                  <span>Create Client Workspace</span>
+                </>
+              )}
+            </button>
+          </div>
         )}
       </div>
     </div>

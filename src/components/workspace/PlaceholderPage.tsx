@@ -24,7 +24,7 @@ export function PlaceholderPage({
       </div>
 
       <div className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700 mb-3">
-        <span>Scheduled for {plannedPhase}</span>
+        <span>Module not enabled yet.</span>
       </div>
 
       <h1 className="text-xl font-bold tracking-tight text-slate-900">{title}</h1>

@@ -13,6 +13,9 @@ import {
   ArrowUp,
   ArrowDown,
   Info,
+  Bot,
+  Power,
+  PowerOff,
 } from "lucide-react";
 
 export default function ClientStrategyPage() {
@@ -64,7 +67,10 @@ export default function ClientStrategyPage() {
               ctaStrategy: json.strategy.ctaStrategy || "",
               campaignPriorities: json.strategy.campaignPriorities || "",
               specialInstructions: json.strategy.specialInstructions || "",
-              pillars: json.strategy.pillars || [],
+              pillars: (json.strategy.pillars || []).map((p: any) => ({
+                ...p,
+                isActive: p.isActive ?? true,
+              })),
             });
           }
         }
@@ -87,7 +93,7 @@ export default function ClientStrategyPage() {
     setFormData((prev: any) => ({ ...prev, [field]: value }));
   };
 
-  // Content Pillar management
+  // Content Pillar management: Add, Edit, Reorder, Enable/Disable, Delete
   const addPillar = () => {
     markDirty();
     setFormData((prev: any) => ({
@@ -97,17 +103,42 @@ export default function ClientStrategyPage() {
         {
           title: `Content Pillar ${prev.pillars.length + 1}`,
           description: "",
+          isActive: true,
           orderIndex: prev.pillars.length + 1,
         },
       ],
     }));
   };
 
-  const updatePillar = (index: number, field: string, val: string) => {
+  const updatePillar = (index: number, field: string, val: any) => {
     markDirty();
     setFormData((prev: any) => {
       const updated = [...prev.pillars];
       updated[index] = { ...updated[index], [field]: val };
+      return { ...prev, pillars: updated };
+    });
+  };
+
+  const togglePillarActive = (index: number) => {
+    markDirty();
+    setFormData((prev: any) => {
+      const updated = [...prev.pillars];
+      updated[index] = { ...updated[index], isActive: !updated[index].isActive };
+      return { ...prev, pillars: updated };
+    });
+  };
+
+  const movePillar = (index: number, direction: "UP" | "DOWN") => {
+    if (direction === "UP" && index === 0) return;
+    if (direction === "DOWN" && index === formData.pillars.length - 1) return;
+
+    markDirty();
+    setFormData((prev: any) => {
+      const updated = [...prev.pillars];
+      const targetIndex = direction === "UP" ? index - 1 : index + 1;
+      const temp = updated[index];
+      updated[index] = updated[targetIndex];
+      updated[targetIndex] = temp;
       return { ...prev, pillars: updated };
     });
   };
@@ -156,12 +187,11 @@ export default function ClientStrategyPage() {
             </h1>
             <span className="inline-flex items-center gap-1 rounded-full bg-indigo-50 px-2.5 py-0.5 text-xs font-semibold text-indigo-700 ring-1 ring-indigo-600/20 ring-inset">
               <Sparkles className="h-3 w-3" />
-              AI Brain Foundation
+              Strategy Brain Foundation
             </span>
           </div>
           <p className="mt-1 text-xs text-slate-500">
-            Client Strategy specifications for <strong>{client?.name}</strong>. This knowledge base
-            will feed the generative strategy engine.
+            Marketing Strategy specifications and content pillars for <strong>{client?.name}</strong>.
           </p>
         </div>
 
@@ -175,7 +205,7 @@ export default function ClientStrategyPage() {
           <button
             onClick={handleSave}
             disabled={saving}
-            className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2 text-xs font-semibold text-white shadow-xs hover:bg-blue-700 disabled:opacity-50 cursor-pointer"
+            className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2 text-xs font-semibold text-white shadow-2xs hover:bg-blue-700 disabled:opacity-50 cursor-pointer"
           >
             <Save className="h-4 w-4" />
             <span>{saving ? "Saving Strategy..." : "Save Strategy"}</span>
@@ -183,25 +213,28 @@ export default function ClientStrategyPage() {
         </div>
       </div>
 
-      {/* Information Banner */}
-      <div className="flex items-start gap-3 rounded-2xl border border-indigo-100 bg-indigo-50/50 p-4 text-xs text-indigo-900">
-        <Info className="h-4 w-4 text-indigo-600 shrink-0 mt-0.5" />
-        <div>
-          <p className="font-bold">AI Strategy Preparation Mode</p>
-          <p className="mt-0.5 text-indigo-700 leading-relaxed">
-            In Phase 1, all strategy fields and content pillars are fully configurable and stored
-            in the client's isolated database partition. AI generation via Gemini will connect
-            directly to these parameters in subsequent phases.
-          </p>
+      {/* AI STRATEGY ASSISTANT FUTURE PLACEHOLDER (Section 13 requirement) */}
+      <div className="flex items-center justify-between rounded-2xl border border-indigo-200/80 bg-gradient-to-r from-indigo-50/80 via-blue-50/60 to-purple-50/40 p-4 shadow-2xs">
+        <div className="flex items-center gap-3.5">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-600 text-white shadow-md">
+            <Bot className="h-5 w-5" />
+          </div>
+          <div>
+            <h3 className="text-sm font-bold text-indigo-950">AI Strategy Assistant</h3>
+            <p className="text-xs text-indigo-700">Coming in a future phase</p>
+          </div>
         </div>
+        <span className="rounded-full bg-indigo-100 px-3 py-1 text-[11px] font-semibold text-indigo-700">
+          Planned for Phase 3
+        </span>
       </div>
 
-      {/* Main Strategy Fields */}
+      {/* Main Strategy Form Fields */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         {/* Left Column (2 Cols): Strategy Parameters */}
         <div className="lg:col-span-2 space-y-6">
           {/* Core Foundations */}
-          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs space-y-4">
+          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-2xs space-y-4">
             <h2 className="text-sm font-bold text-slate-900 border-b border-slate-100 pb-2">
               Strategic Foundation
             </h2>
@@ -214,7 +247,7 @@ export default function ClientStrategyPage() {
                 rows={2}
                 value={formData.brandPositioning}
                 onChange={(e) => updateField("brandPositioning", e.target.value)}
-                placeholder="How this client stands out from all competitors..."
+                placeholder="How this client stands out from competitors..."
                 className="mt-1.5 w-full rounded-xl border border-slate-200 px-3.5 py-2 text-xs focus:border-blue-500 focus:outline-hidden"
               />
             </div>
@@ -288,9 +321,9 @@ export default function ClientStrategyPage() {
           </div>
 
           {/* Value Proposition & Operations */}
-          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs space-y-4">
+          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-2xs space-y-4">
             <h2 className="text-sm font-bold text-slate-900 border-b border-slate-100 pb-2">
-              Value Proposition & Communication
+              Value Proposition & Communication Strategy
             </h2>
 
             <div>
@@ -373,9 +406,9 @@ export default function ClientStrategyPage() {
           </div>
         </div>
 
-        {/* Right Column (1 Col): Content Pillars */}
+        {/* Right Column (1 Col): Content Pillars (Add, Edit, Reorder, Enable/Disable, Delete) */}
         <div className="space-y-6">
-          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs flex flex-col justify-between">
+          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-2xs flex flex-col justify-between">
             <div>
               <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                 <div className="flex items-center gap-2">
@@ -385,7 +418,7 @@ export default function ClientStrategyPage() {
                 <button
                   type="button"
                   onClick={addPillar}
-                  className="inline-flex items-center gap-1 rounded-lg bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-200"
+                  className="inline-flex items-center gap-1 rounded-lg bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-200 cursor-pointer"
                 >
                   <Plus className="h-3 w-3" />
                   <span>Add Pillar</span>
@@ -393,18 +426,22 @@ export default function ClientStrategyPage() {
               </div>
 
               <p className="mt-2 text-xs text-slate-500">
-                Content pillars serve as the repeatable topics for social publishing.
+                Support: Add, Edit, Reorder, Enable/Disable, Delete.
               </p>
 
               <div className="mt-4 space-y-3">
                 {formData.pillars.map((pillar: any, index: number) => (
                   <div
                     key={index}
-                    className="rounded-xl border border-indigo-100 bg-indigo-50/30 p-3 space-y-2"
+                    className={`rounded-xl border p-3 space-y-2 transition-all ${
+                      pillar.isActive
+                        ? "border-indigo-100 bg-indigo-50/30"
+                        : "border-slate-200 bg-slate-100/60 opacity-60"
+                    }`}
                   >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <span className="flex h-5 w-5 items-center justify-center rounded-md bg-indigo-600 text-[10px] font-bold text-white">
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2 flex-1">
+                        <span className="flex h-5 w-5 items-center justify-center rounded-md bg-indigo-600 text-[10px] font-bold text-white shrink-0">
                           {index + 1}
                         </span>
                         <input
@@ -416,13 +453,45 @@ export default function ClientStrategyPage() {
                         />
                       </div>
 
-                      <button
-                        type="button"
-                        onClick={() => removePillar(index)}
-                        className="text-slate-400 hover:text-red-600"
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </button>
+                      {/* Controls: Reorder Up/Down, Enable/Disable, Delete */}
+                      <div className="flex items-center gap-1 shrink-0">
+                        <button
+                          type="button"
+                          disabled={index === 0}
+                          onClick={() => movePillar(index, "UP")}
+                          className="p-1 text-slate-400 hover:text-slate-700 disabled:opacity-30 cursor-pointer"
+                          title="Move Up"
+                        >
+                          <ArrowUp className="h-3.5 w-3.5" />
+                        </button>
+                        <button
+                          type="button"
+                          disabled={index === formData.pillars.length - 1}
+                          onClick={() => movePillar(index, "DOWN")}
+                          className="p-1 text-slate-400 hover:text-slate-700 disabled:opacity-30 cursor-pointer"
+                          title="Move Down"
+                        >
+                          <ArrowDown className="h-3.5 w-3.5" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => togglePillarActive(index)}
+                          className={`p-1 rounded-md cursor-pointer ${
+                            pillar.isActive ? "text-emerald-600 hover:bg-emerald-50" : "text-slate-400 hover:bg-slate-200"
+                          }`}
+                          title={pillar.isActive ? "Disable Pillar" : "Enable Pillar"}
+                        >
+                          {pillar.isActive ? <Power className="h-3.5 w-3.5" /> : <PowerOff className="h-3.5 w-3.5" />}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => removePillar(index)}
+                          className="p-1 text-slate-400 hover:text-red-600 cursor-pointer"
+                          title="Delete Pillar"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
                     </div>
 
                     <input

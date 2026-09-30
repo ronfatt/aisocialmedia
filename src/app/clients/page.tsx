@@ -56,9 +56,9 @@ export default function ClientsPage() {
         {/* Role Identity indicator */}
         <div className="flex items-center gap-2 text-xs text-slate-500 bg-white border border-slate-200 rounded-xl px-3 py-2 shadow-xs">
           <span>Active Scope:</span>
-          <span className="font-semibold text-slate-800">{activeUser.name}</span>
+          <span className="font-semibold text-slate-800">{activeUser?.name || "User"}</span>
           <span className="rounded-md bg-slate-100 px-1.5 py-0.5 text-[10px] font-bold text-slate-600">
-            {activeUser.role}
+            {activeUser?.role || "VIEWER"}
           </span>
         </div>
       </div>

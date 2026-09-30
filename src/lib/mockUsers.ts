@@ -2,15 +2,15 @@ import { AuthenticatedUser } from "@/types";
 
 export const MOCK_USERS: AuthenticatedUser[] = [
   {
-    id: "admin-sarah",
+    id: "user-sarah",
     name: "Sarah Chen",
     email: "sarah.chen@apexmedia.io",
-    role: "ADMIN",
+    role: "OWNER",
     organizationId: "org-apex",
     avatarUrl: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=120&h=120&fit=crop&crop=face",
   },
   {
-    id: "manager-marcus",
+    id: "user-marcus",
     name: "Marcus Wong",
     email: "marcus.wong@apexmedia.io",
     role: "ACCOUNT_MANAGER",
@@ -18,11 +18,43 @@ export const MOCK_USERS: AuthenticatedUser[] = [
     avatarUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&h=120&fit=crop&crop=face",
   },
   {
-    id: "manager-aisha",
+    id: "user-aisha",
     name: "Aisha Rahman",
     email: "aisha.rahman@apexmedia.io",
     role: "ACCOUNT_MANAGER",
     organizationId: "org-apex",
     avatarUrl: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&h=120&fit=crop&crop=face",
+  },
+  {
+    id: "user-david",
+    name: "David Tan",
+    email: "david.tan@apexmedia.io",
+    role: "CONTENT_CREATOR",
+    organizationId: "org-apex",
+    avatarUrl: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=120&h=120&fit=crop&crop=face",
+  },
+  {
+    id: "user-elena",
+    name: "Elena Gomez",
+    email: "elena.gomez@apexmedia.io",
+    role: "APPROVER",
+    organizationId: "org-apex",
+    avatarUrl: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=120&h=120&fit=crop&crop=face",
+  },
+  {
+    id: "user-kevin",
+    name: "Kevin Lee",
+    email: "kevin.lee@apexmedia.io",
+    role: "SALES",
+    organizationId: "org-apex",
+    avatarUrl: "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=120&h=120&fit=crop&crop=face",
+  },
+  {
+    id: "user-rachel",
+    name: "Rachel Adams",
+    email: "rachel.adams@apexmedia.io",
+    role: "VIEWER",
+    organizationId: "org-apex",
+    avatarUrl: "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=120&h=120&fit=crop&crop=face",
   },
 ];
