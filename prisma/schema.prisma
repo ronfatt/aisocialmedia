@@ -1,0 +1,347 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+// ----------------------------------------------------
+// 1. ORGANIZATIONS & USERS (Agency Level)
+// ----------------------------------------------------
+
+model Organization {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  logoUrl     String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  users       User[]
+  clients     Client[]
+}
+
+model User {
+  id              String         @id @default(cuid())
+  organizationId  String
+  organization    Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  email           String         @unique
+  name            String
+  passwordHash    String
+  role            String         @default("ACCOUNT_MANAGER") // OWNER, ADMIN, ACCOUNT_MANAGER, CONTENT_CREATOR, APPROVER, SALES, VIEWER
+  avatarUrl       String?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  clientMemberships ClientMember[]
+  activityLogs      ActivityLog[]
+
+  @@index([organizationId])
+}
+
+// ----------------------------------------------------
+// 2. CLIENT WORKSPACE & MEMBERSHIP
+// ----------------------------------------------------
+
+model Client {
+  id              String         @id @default(cuid())
+  organizationId  String
+  organization    Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  
+  name            String         // e.g. "UXUI HOLDINGS"
+  brandName       String?
+  slug            String         @unique
+  logoUrl         String?
+  industry        String         // e.g. "Industrial / Metal Fabrication"
+  locationCity    String         // e.g. "Klang"
+  locationState   String         // e.g. "Selangor"
+  locationCountry String         @default("Malaysia")
+  status          String         @default("ACTIVE") // ACTIVE, ONBOARDING, PAUSED, ARCHIVED
+
+  accountManagerId String?
+  accountManagerName String?
+  
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  members           ClientMember[]
+  profile           ClientProfile?
+  services          ClientService[]
+  targetMarket      ClientTargetMarket?
+  brandProfile      ClientBrandProfile?
+  marketingObjectives ClientMarketingObjective[]
+  competitors       ClientCompetitor[]
+  notes             ClientNote[]
+  strategy          ClientStrategy?
+  socialAccounts    SocialAccount[]
+  campaigns         Campaign[]
+  contentItems      ContentItem[]
+  mediaAssets       MediaAsset[]
+  activityLogs      ActivityLog[]
+
+  @@index([organizationId])
+  @@index([status])
+}
+
+model ClientMember {
+  id        String   @id @default(cuid())
+  clientId  String
+  client    Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role      String   @default("ACCOUNT_MANAGER")
+  createdAt DateTime @default(now())
+
+  @@unique([clientId, userId])
+  @@index([userId])
+}
+
+// ----------------------------------------------------
+// 3. CLIENT PROFILE SECTIONS
+// ----------------------------------------------------
+
+model ClientProfile {
+  id                  String   @id @default(cuid())
+  clientId            String   @unique
+  client              Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  
+  businessDescription String?
+  website             String?
+  phone               String?
+  whatsapp            String?
+  email               String?
+  address             String?
+  city                String?
+  state               String?
+  country             String?  @default("Malaysia")
+  serviceAreas        String?  // JSON string or comma-separated
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+}
+
+model ClientService {
+  id              String   @id @default(cuid())
+  clientId        String
+  client          Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  name            String   // e.g. "Laser Cutting"
+  category        String   // e.g. "Metal Fabrication"
+  description     String
+  sellingPoints   String   // JSON string array e.g. '["High precision","Fast production"]'
+  targetCustomers String   // JSON string array e.g. '["Factories","Automation companies"]'
+  priceInfo       String?
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([clientId])
+}
+
+model ClientTargetMarket {
+  id                  String   @id @default(cuid())
+  clientId            String   @unique
+  client              Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  
+  geographicTarget    String   // e.g. "Malaysia, Singapore"
+  industryTarget      String   // e.g. "Automation, Metal Fabrication"
+  customerType        String   // "B2B", "B2C", "B2B2C"
+  languages           String   // JSON string array e.g. '["English","Bahasa Melayu","Chinese"]'
+  ageRange            String?
+  buyerPersona        String?
+  decisionMakers      String   // JSON string array e.g. '["Purchasing Manager","Engineering Manager"]'
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+}
+
+model ClientBrandProfile {
+  id                String   @id @default(cuid())
+  clientId          String   @unique
+  client            Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  
+  brandPositioning  String?
+  brandTone         String?  // e.g. "Authoritative, Industrial, Reliable"
+  preferredLanguage String   @default("English")
+  secondaryLanguage String?
+  visualStyle       String?
+  brandColours      String   @default("[]") // JSON string array of hex colours e.g. '["#0F172A","#2563EB"]'
+  avoidedWords      String   @default("[]") // JSON string array e.g. '["cheap","discount"]'
+  preferredCta      String?  // e.g. "Request an Engineering Consultation"
+  companySlogan     String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
+model ClientMarketingObjective {
+  id          String   @id @default(cuid())
+  clientId    String
+  client      Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  title       String   // e.g. "Generate WhatsApp enquiries"
+  description String?
+  priority    Int      @default(1)
+  isCompleted Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  @@index([clientId])
+}
+
+model ClientCompetitor {
+  id          String   @id @default(cuid())
+  clientId    String
+  client      Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  name        String
+  website     String?
+  facebookUrl String?
+  instagramUrl String?
+  tiktokUrl   String?
+  notes       String?
+  createdAt   DateTime @default(now())
+
+  @@index([clientId])
+}
+
+model ClientNote {
+  id          String   @id @default(cuid())
+  clientId    String
+  client      Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  authorName  String   @default("Agency Account Team")
+  title       String
+  content     String
+  isPinned    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([clientId])
+}
+
+// ----------------------------------------------------
+// 4. CLIENT STRATEGY & CONTENT PILLARS
+// ----------------------------------------------------
+
+model ClientStrategy {
+  id                  String   @id @default(cuid())
+  clientId            String   @unique
+  client              Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  
+  brandPositioning    String?
+  marketingObjectives String?
+  targetAudience      String?
+  targetLocations     String?
+  targetIndustries    String?
+  mainProductsServices String?
+  keySellingPoints    String?
+  preferredPlatforms  String   @default("[\"Facebook\",\"Instagram\"]") // JSON array
+  postingFrequency    String?  // e.g. "4 posts / week"
+  languageStrategy    String?
+  ctaStrategy         String?
+  campaignPriorities  String?
+  specialInstructions String?
+
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  pillars             ContentPillar[]
+}
+
+model ContentPillar {
+  id          String         @id @default(cuid())
+  strategyId  String
+  strategy    ClientStrategy @relation(fields: [strategyId], references: [id], onDelete: Cascade)
+  title       String         // e.g. "Laser Cutting"
+  description String?
+  orderIndex  Int            @default(0)
+  createdAt   DateTime       @default(now())
+
+  @@index([strategyId])
+}
+
+// ----------------------------------------------------
+// 5. SOCIAL ACCOUNTS (Isolated & Encrypted Tokens)
+// ----------------------------------------------------
+
+model SocialAccount {
+  id                     String           @id @default(cuid())
+  clientId               String
+  client                 Client           @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  platform               String           // FACEBOOK, INSTAGRAM, TIKTOK
+  platformAccountId      String?
+  displayName            String?          // e.g. "UXUI Holdings Official"
+  connectionStatus       String           @default("PENDING_INTEGRATION") // CONNECTED, DISCONNECTED, PENDING_INTEGRATION, EXPIRED
+  
+  // Encrypted at rest (AES-256-GCM) - Never returned to browser client
+  accessTokenEncrypted   String?
+  refreshTokenEncrypted  String?
+  tokenExpiry            DateTime?
+  
+  metadata               String?          // JSON metadata e.g. follower count, handle
+  createdAt              DateTime         @default(now())
+  updatedAt              DateTime         @updatedAt
+
+  @@unique([clientId, platform])
+  @@index([clientId])
+}
+
+// ----------------------------------------------------
+// 6. CONTENT, CALENDAR, MEDIA & CAMPAIGNS (Shells)
+// ----------------------------------------------------
+
+model Campaign {
+  id          String        @id @default(cuid())
+  clientId    String
+  client      Client        @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  name        String
+  startDate   DateTime?
+  endDate     DateTime?
+  status      String        @default("Active")
+  createdAt   DateTime      @default(now())
+
+  contentItems ContentItem[]
+  @@index([clientId])
+}
+
+model ContentItem {
+  id          String        @id @default(cuid())
+  clientId    String
+  client      Client        @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  campaignId  String?
+  campaign    Campaign?     @relation(fields: [campaignId], references: [id], onDelete: SetNull)
+  title       String
+  bodyText    String?
+  status      String        @default("DRAFT") // DRAFT, PENDING_APPROVAL, APPROVED, SCHEDULED, PUBLISHED, ARCHIVED
+  scheduledFor DateTime?
+  publishedAt DateTime?
+  platforms   String        @default("[\"FACEBOOK\"]") // JSON array of platforms
+  createdBy   String        @default("Agency Team")
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@index([clientId])
+  @@index([status])
+  @@index([scheduledFor])
+}
+
+model MediaAsset {
+  id          String   @id @default(cuid())
+  clientId    String
+  client      Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  fileName    String
+  fileUrl     String
+  fileType    String   // "image/png", "video/mp4"
+  fileSize    Int
+  createdAt   DateTime @default(now())
+
+  @@index([clientId])
+}
+
+model ActivityLog {
+  id          String   @id @default(cuid())
+  clientId    String?
+  client      Client?  @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  userId      String?
+  user        User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  action      String   // e.g. "CONTENT_CREATED", "STRATEGY_UPDATED", "CLIENT_CREATED"
+  description String
+  createdAt   DateTime @default(now())
+
+  @@index([clientId])
+}
