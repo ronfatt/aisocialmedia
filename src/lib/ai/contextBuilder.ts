@@ -127,6 +127,7 @@ export async function buildClientMarketingContext(
     locationState: client.locationState,
     locationCountry: client.locationCountry,
     businessDescription: client.profile?.businessDescription || `${client.name} is a company in ${client.industry}.`,
+    website: client.profile?.website || (client.name.includes("SPARK") ? "https://sparkunioncapital.com" : undefined),
     services,
     targetMarket: {
       geographicTarget: tm?.geographicTarget || `${client.locationCity}, ${client.locationState}`,

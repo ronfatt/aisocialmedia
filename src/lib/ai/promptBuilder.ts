@@ -73,7 +73,8 @@ PLATFORM REQUIREMENTS (TIKTOK):
 - Output JSON Keys: "hook", "onScreenText", "videoIdea", "caption", "cta", "hashtags"`,
     TWITTER: `
 PLATFORM REQUIREMENTS (TWITTER / X):
-- Format: Punchy First-Line Hook (under 280 characters or micro-thread), high-conviction institutional/quant tone, crisp bulleted points, cashtags if relevant, 2-3 focused hashtags (e.g. #Quant #Alpha #AI #DeFi), and verifiable on-chain hash reference or CTA.
+- Format: Punchy First-Line Hook (under 280 characters or micro-thread), high-conviction institutional/quant tone, crisp bulleted points, cashtags if relevant, 2-3 focused hashtags (e.g. #Quant #Alpha #AI #DeFi), verifiable on-chain hash reference, and MANDATORY official website link: ${context.website || "https://sparkunioncapital.com"}.
+- Always append the official website URL: ${context.website || "https://sparkunioncapital.com"} in the tweet caption or CTA.
 - Tone: Ultra-sharp, mathematical, authoritative, no-BS, high-conviction cyber-financial.
 - Output JSON Keys: "hook", "caption", "cta", "hashtags"`,
   }[req.platform];

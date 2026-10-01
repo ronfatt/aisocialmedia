@@ -7,6 +7,7 @@ export interface ClientMarketingContext {
   locationState: string;
   locationCountry: string;
   businessDescription: string;
+  website?: string;
   services: Array<{
     id: string;
     name: string;

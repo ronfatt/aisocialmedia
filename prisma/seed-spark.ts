@@ -42,8 +42,8 @@ async function seedSparkClient() {
     update: {
       businessDescription:
         "SPARK 是一家全栈自研的机构级 AI 原生对冲基金与量化科研机构。全球首家将核心量化策略哈希值实时锚定链上，通过多智能体集群架构、自研 GPU+FPGA 硬件级亚毫秒底座与动态前置风控，全天候全自动捕获全球跨时区股票、债券、外汇、大宗商品及加密资产的流动性节律。在这里，透明度不是承诺，而是一种物理定律。",
-      website: "https://sparkquant.ai",
-      email: "research@sparkquant.ai",
+      website: "https://sparkunioncapital.com",
+      email: "research@sparkunioncapital.com",
       city: "Singapore",
       country: "Singapore",
       serviceAreas: "Global Cross-Border Quantitative Markets",
@@ -52,8 +52,8 @@ async function seedSparkClient() {
       clientId,
       businessDescription:
         "SPARK 是一家全栈自研的机构级 AI 原生对冲基金与量化科研机构。全球首家将核心量化策略哈希值实时锚定链上，通过多智能体集群架构、自研 GPU+FPGA 硬件级亚毫秒底座与动态前置风控，全天候全自动捕获全球跨时区股票、债券、外汇、大宗商品及加密资产的流动性节律。在这里，透明度不是承诺，而是一种物理定律。",
-      website: "https://sparkquant.ai",
-      email: "research@sparkquant.ai",
+      website: "https://sparkunioncapital.com",
+      email: "research@sparkunioncapital.com",
       city: "Singapore",
       country: "Singapore",
       serviceAreas: "Global Cross-Border Quantitative Markets",
@@ -71,7 +71,7 @@ async function seedSparkClient() {
       visualStyle: "Cyberpunk Financial Terminal, Dark Mode, High-precision Neon Teal & Electric Blue",
       brandColours: JSON.stringify(["#0B0F19", "#00F2FE", "#4FACFE", "#10B981"]),
       avoidedWords: JSON.stringify(["保本保收益", "稳赚不赔", "百倍币", "暴富内幕", "财富密码"]),
-      preferredCta: "查阅链上存证哈希并订阅每日 SPARK 内参",
+      preferredCta: "查阅链上存证哈希并访问官网：https://sparkunioncapital.com",
       companySlogan: "透明度不是一种承诺，而是一种物理定律。",
     },
     create: {
@@ -83,7 +83,7 @@ async function seedSparkClient() {
       visualStyle: "Cyberpunk Financial Terminal, Dark Mode, High-precision Neon Teal & Electric Blue",
       brandColours: JSON.stringify(["#0B0F19", "#00F2FE", "#4FACFE", "#10B981"]),
       avoidedWords: JSON.stringify(["保本保收益", "稳赚不赔", "百倍币", "暴富内幕", "财富密码"]),
-      preferredCta: "查阅链上存证哈希并订阅每日 SPARK 内参",
+      preferredCta: "查阅链上存证哈希并访问官网：https://sparkunioncapital.com",
       companySlogan: "透明度不是一种承诺，而是一种物理定律。",
     },
   });
@@ -261,12 +261,16 @@ async function seedSparkClient() {
     });
   }
 
+  // Clear existing items and variants for clean re-seeding
+  await db.postVariant.deleteMany({ where: { clientId } });
+  await db.contentItem.deleteMany({ where: { clientId } });
+
   // 6. Pre-populate Sample Master Content Items with TWITTER & Multi-Platform Variants
   const sampleItems = [
     {
       title: "【SPARK 内参】连矿工都在盯着看的量化策略：透明度即物理定律",
       coreMessage: "全球首家将核心策略哈希实时锚定链上，打破传统基金黑盒，用数学和区块链建立不可篡改的信任。",
-      callToAction: "查阅链上今日策略存证哈希",
+      callToAction: "查阅链上今日策略存证哈希：https://sparkunioncapital.com",
       platforms: ["TWITTER", "FACEBOOK", "INSTAGRAM", "TIKTOK"],
       status: "APPROVED",
       twitterHook: "“我们的策略，连矿工都在盯着看。”",
@@ -277,6 +281,7 @@ async function seedSparkClient() {
 在这里，透明度不是一种承诺，而是一种物理定律。
 
 🔗 今日策略哈希：0x89e2...f54b
+🌐 官网: https://sparkunioncapital.com
 $BTC $ETH #AIQuant #Crypto #Alpha #SPARK`,
       fbCaption: `【SPARK 每日量化研报 | 透明度宣言】
 
@@ -288,7 +293,7 @@ $BTC $ETH #AIQuant #Crypto #Alpha #SPARK`,
 
 在这里，透明度不是一种口头承诺，而是一种物理定律。
 
-👉 查阅今日全量链上存证哈希并订阅 SPARK 内参。`,
+👉 查阅今日全量链上存证哈希并访问官网：https://sparkunioncapital.com`,
       igCaption: `“我们的策略，连矿工都在盯着看。” ⚡
 
 打破传统对冲基金“只知其然”的黑盒。
@@ -297,6 +302,7 @@ $BTC $ETH #AIQuant #Crypto #Alpha #SPARK`,
 你不需要盲信任何人；
 你只需要相信数学、算法与不可篡改的区块。
 
+🔗 探索：https://sparkunioncapital.com
 #SPARKQuant #AI #QuantFinance #CryptoTrading #Transparency #FinTech #Alpha`,
       tiktokHook: "当对冲基金的策略连矿工都能查，传统金融沉默了",
       tiktokOnScreen: "全球首家策略哈希上链的 AI 量化基金 ⚡",
@@ -305,7 +311,7 @@ $BTC $ETH #AIQuant #Crypto #Alpha #SPARK`,
     {
       title: "【SPARK 内参】技术降维：当别人回测2024，我们在模拟2027流动性枯竭",
       coreMessage: "我们训练AI的不是历史数据，而是市场性格。通过对抗生成网络GAN模拟极端黑天鹅，具备穿透周期的预知力。",
-      callToAction: "阅读完整黑天鹅压力测试报告",
+      callToAction: "阅读完整黑天鹅压力测试报告：https://sparkunioncapital.com",
       platforms: ["TWITTER", "FACEBOOK", "INSTAGRAM", "TIKTOK"],
       status: "APPROVED",
       twitterHook: "“当别的模型还在回测2024，我们的AI已经在模拟2027的流动性枯竭。”",
@@ -315,6 +321,7 @@ $BTC $ETH #AIQuant #Crypto #Alpha #SPARK`,
 
 通过对抗生成网络（GAN）模拟极端黑天鹅，我们的量化引擎在实盘中展现的不是被动适应力，而是预知力。
 
+🌐 研报白皮书: https://sparkunioncapital.com
 #Quant #AI #MachineLearning #RiskManagement #SPARK`,
       fbCaption: `【SPARK AI 实验室 | 深度技术拆解】
 
@@ -326,7 +333,7 @@ SPARK 采用生成对抗网络（GAN）构建“合成极端市场”。通过�
 
 当真正的黑天鹅来临时，对人类而言是猝不及防的灾难；而对 SPARK 的算法而言，这只是它在虚拟机里跑过上亿次的普通一天。
 
-👉 点击链接阅读 SPARK 极端情景压力测试白皮书。`,
+👉 点击链接阅读 SPARK 极端情景压力测试白皮书：https://sparkunioncapital.com`,
       igCaption: `“当别的模型还在回测2024，我们的AI已经在模拟2027的流动性枯竭。” 🌪️
 
 拒绝历史过拟合。
@@ -334,6 +341,7 @@ SPARK 采用生成对抗网络（GAN）构建“合成极端市场”。通过�
 
 在黑天鹅降临前，预知力才是最坚固的护城河。
 
+🔗 研报详情：https://sparkunioncapital.com
 #SPARK #Alpha #ArtificialIntelligence #RiskControl #QuantFund #Trading`,
       tiktokHook: "为什么 90% 靠过去数据做量化的模型都会爆仓？",
       tiktokOnScreen: "AI模拟2027极端流动性枯竭现场 ⚠️",
@@ -342,7 +350,7 @@ SPARK 采用生成对抗网络（GAN）构建“合成极端市场”。通过�
     {
       title: "【SPARK 内参】打破黑盒诅咒：我们逼着AI每次交易后写一份人类能懂的复盘",
       coreMessage: "可解释AI（XAI）实现人机对话。不仅告诉你买卖结论，还用自然语言阐述因果关系与宏观逻辑。",
-      callToAction: "查看今日最新 XAI 人机对话实盘记录",
+      callToAction: "查看今日最新 XAI 人机对话实盘记录：https://sparkunioncapital.com",
       platforms: ["TWITTER", "FACEBOOK", "INSTAGRAM", "TIKTOK"],
       status: "APPROVED",
       twitterHook: "“我们逼着AI在每次交易后，写一份人类能看懂的复盘报告。”",
@@ -352,6 +360,7 @@ SPARK 采用生成对抗网络（GAN）构建“合成极端市场”。通过�
 
 这是量化界的第一次真正“人机对话”。
 
+🌐 实盘复盘: https://sparkunioncapital.com
 $SPX $BTC #ExplainableAI #QuantFinance #FinTwit #SPARK`,
       fbCaption: `【SPARK 投研前线 | XAI 人机对话纪元】
 
@@ -363,12 +372,13 @@ SPARK 打破了这个诅咒。通过融合多模态大语言模型与强化学�
 
 不仅告诉你怎么赢，更让你看清系统为何这样决断。这是属于量化科技的真正人机对话。
 
-👉 立即体验 SPARK 每日 XAI 复盘日志。`,
+👉 立即体验 SPARK 每日 XAI 复盘日志：https://sparkunioncapital.com`,
       igCaption: `“我们逼着AI在每次交易后，写一份人类能看懂的复盘报告。” 🤖📝
 
 量化界第一次真正的“人机对话”。
 用自然语言剖析每一笔交易背后的宏观逻辑与微观信号。
 
+🔗 实盘对话记录：https://sparkunioncapital.com
 #XAI #ExplainableAI #SPARKAI #QuantitativeTrading #FinTechInnovation`,
       tiktokHook: "你能想象吗？AI做完一笔数百万的交易后，还要自己写检讨和复盘",
       tiktokOnScreen: "让AI自己解释为什么在这秒买入 💻",
@@ -377,7 +387,7 @@ SPARK 打破了这个诅咒。通过融合多模态大语言模型与强化学�
     {
       title: "【SPARK 内参】全天候跨资产对冲：无论美联储如何决策，只有服务器风扇的轰鸣",
       coreMessage: "通过全球股、债、汇、商品及加密资产的自适应对冲，不预测涨跌，只捕捉呼吸节奏。",
-      callToAction: "查看跨资产自适应收益曲线",
+      callToAction: "查看跨资产自适应收益曲线：https://sparkunioncapital.com",
       platforms: ["TWITTER", "FACEBOOK", "INSTAGRAM", "TIKTOK"],
       status: "APPROVED",
       twitterHook: "“牛市里我们是镰刀，熊市里我们是收割机，震荡市里我们是绞肉机。”",
@@ -385,6 +395,7 @@ SPARK 打破了这个诅咒。通过融合多模态大语言模型与强化学�
 
 无论美联储加息还是降息，你听到的只有我们服务器风扇平稳的轰鸣。
 
+🌐 访问主页: https://sparkunioncapital.com
 #Macro #Quant #HedgeFund #GlobalMarkets #SPARK`,
       fbCaption: `【SPARK 宏观策略 | 全周期对冲哲学】
 
@@ -396,12 +407,13 @@ SPARK 打破了这个诅咒。通过融合多模态大语言模型与强化学�
 
 无论华尔街喧嚣如何，无论美联储鸽派还是鹰派，在 SPARK 全球核心机房里，你听到的只有服务器风扇平稳的轰鸣。
 
-👉 查阅 SPARK 跨周期自适应回撤控制表现。`,
+👉 查阅 SPARK 跨周期自适应回撤控制表现：https://sparkunioncapital.com`,
       igCaption: `“牛市里是镰刀，熊市里是收割机，震荡市里是绞肉机。” ⚙️
 
 全资产动态对冲。
 不预测单边涨跌，只捕捉全球市场的呼吸节律。
 
+🔗 宏观收益曲线：https://sparkunioncapital.com
 #SPARK #HedgeFundLife #QuantTrading #RiskManagement #MacroAlpha`,
       tiktokHook: "为什么顶尖对冲基金根本不关心明天大盘是涨还是跌？",
       tiktokOnScreen: "听，这是机房服务器平稳的轰鸣声 🔊",
@@ -410,7 +422,7 @@ SPARK 打破了这个诅咒。通过融合多模态大语言模型与强化学�
     {
       title: "【SPARK 终极愿景】让 AI 自主发行一只 ETF，而人类只负责按下‘同意’",
       coreMessage: "全流程由 AI Agent 闭环运行，培育能自我进化、自我赚钱、自我负责的数字金融生命体。",
-      callToAction: "加入 SPARK 全球机构观察者网络",
+      callToAction: "加入 SPARK 全球机构观察者网络：https://sparkunioncapital.com",
       platforms: ["TWITTER", "FACEBOOK", "INSTAGRAM", "TIKTOK"],
       status: "APPROVED",
       twitterHook: "“我们的终极目标，是让AI自主发行一只ETF，而人类只负责按下‘同意’。”",
@@ -418,6 +430,7 @@ SPARK 打破了这个诅咒。通过融合多模态大语言模型与强化学�
 
 我们不是在管理基金，我们是在培育一个能自己进化、自己赚钱、自己对自己负责的数字生命体。
 
+🌐 探索未来: https://sparkunioncapital.com
 #FutureOfFinance #AIAgents #Web3 #ETF #SPARK`,
       fbCaption: `【SPARK 远景宣言 | 数字生命体的黎明】
 
@@ -431,12 +444,13 @@ SPARK 打破了这个诅咒。通过融合多模态大语言模型与强化学�
 
 未来已来。欢迎与 SPARK 一道见证金融新范式的确立。
 
-👉 探索 SPARK AI 原生自主资产管理架构。`,
+👉 探索 SPARK AI 原生自主资产管理架构：https://sparkunioncapital.com`,
       igCaption: `“我们的终极目标，是让 AI 自主发行一只 ETF，而人类只负责按下‘同意’。” 🚀
 
 全流程 AI Agent 自动化闭环。
 重新定义数字时代的资产管理。
 
+🔗 探索：https://sparkunioncapital.com
 #SPARK #Web3Finance #ArtificialIntelligence #NextGenQuant #Innovation`,
       tiktokHook: "人类基金经理的时代，真的要被彻底终结了吗？",
       tiktokOnScreen: "让AI自主运营并发行一只ETF 🤖📈",

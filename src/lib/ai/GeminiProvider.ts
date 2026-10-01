@@ -193,9 +193,10 @@ export class GeminiProvider implements IAIProvider {
           hashtags: `#${context.brandName.replace(/\s+/g, "")} #${serviceName.replace(/\s+/g, "")} #Engineering #Fabrication #QualityCraftsmanship`,
         };
       } else if (req.platform === "TWITTER") {
+        const siteUrl = context.website || "https://sparkunioncapital.com";
         return {
           hook: `While traditional models backtest the past, our AI is stress-testing liquidity regimes of 2027.`,
-          caption: `Transparency isn't a promise; it's a physical law.\n\n${context.brandName} deploys multi-agent quantitative intelligence across global macro assets with real-time on-chain cryptographic proof.\n\n🔗 Verified On-Chain Hash | ${cta}`,
+          caption: `Transparency isn't a promise; it's a physical law.\n\n${context.brandName} deploys multi-agent quantitative intelligence across global macro assets with real-time on-chain cryptographic proof.\n\n🔗 ${siteUrl} | ${cta}`,
           cta,
           hashtags: `#Quant #Alpha #AI #FinTech #${context.brandName.replace(/\s+/g, "")}`,
         };
