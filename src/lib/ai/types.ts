@@ -68,7 +68,7 @@ export type SupportedLanguage =
 export interface GenerateVariantRequest {
   clientId?: string;
   contentItemId?: string;
-  platform: "FACEBOOK" | "INSTAGRAM" | "TIKTOK";
+  platform: "FACEBOOK" | "INSTAGRAM" | "TIKTOK" | "TWITTER";
   title?: string;
   coreMessage?: string;
   brief?: string;
@@ -98,7 +98,7 @@ export interface GenerateVariantRequest {
 }
 
 export interface GeneratedVariantOutput {
-  platform: "FACEBOOK" | "INSTAGRAM" | "TIKTOK";
+  platform: "FACEBOOK" | "INSTAGRAM" | "TIKTOK" | "TWITTER";
   headline?: string;
   hook?: string;
   caption: string;

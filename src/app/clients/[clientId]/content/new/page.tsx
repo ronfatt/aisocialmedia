@@ -26,7 +26,7 @@ import {
 } from "lucide-react";
 
 interface VariantData {
-  platform: "FACEBOOK" | "INSTAGRAM" | "TIKTOK";
+  platform: "FACEBOOK" | "INSTAGRAM" | "TIKTOK" | "TWITTER";
   headline: string;
   hook: string;
   caption: string;
@@ -69,6 +69,7 @@ export default function NewContentStudioPage() {
     "FACEBOOK",
     "INSTAGRAM",
     "TIKTOK",
+    "TWITTER",
   ]);
   const [masterLanguage, setMasterLanguage] = useState("English");
   const [isGenerating, setIsGenerating] = useState(false);
@@ -76,7 +77,7 @@ export default function NewContentStudioPage() {
   const [generationError, setGenerationError] = useState("");
 
   // Platform Variants State
-  const [activePlatformTab, setActivePlatformTab] = useState<"FACEBOOK" | "INSTAGRAM" | "TIKTOK">("FACEBOOK");
+  const [activePlatformTab, setActivePlatformTab] = useState<"FACEBOOK" | "INSTAGRAM" | "TIKTOK" | "TWITTER">("FACEBOOK");
   const [variants, setVariants] = useState<Record<string, VariantData>>({
     FACEBOOK: {
       platform: "FACEBOOK",
@@ -107,6 +108,16 @@ export default function NewContentStudioPage() {
       hashtags: "",
       onScreenText: "",
       videoIdea: "",
+      language: "English",
+      isEditedManually: false,
+    },
+    TWITTER: {
+      platform: "TWITTER",
+      headline: "",
+      hook: "",
+      caption: "",
+      cta: "",
+      hashtags: "",
       language: "English",
       isEditedManually: false,
     },
@@ -716,9 +727,9 @@ export default function NewContentStudioPage() {
             </div>
 
             {/* Target Platforms Checklist */}
-            <div className="flex items-center gap-4 pt-1">
+            <div className="flex flex-wrap items-center gap-4 pt-1">
               <span className="text-xs font-semibold text-slate-700">Target Platforms:</span>
-              {["FACEBOOK", "INSTAGRAM", "TIKTOK"].map((p) => {
+              {["FACEBOOK", "INSTAGRAM", "TIKTOK", "TWITTER"].map((p) => {
                 const checked = selectedPlatforms.includes(p);
                 return (
                   <label
@@ -731,7 +742,7 @@ export default function NewContentStudioPage() {
                       onChange={() => togglePlatform(p)}
                       className="rounded border-purple-300 text-purple-600 focus:ring-purple-500"
                     />
-                    <span className="capitalize">{p.toLowerCase()}</span>
+                    <span className="capitalize">{p === "TWITTER" ? "Twitter / 𝕏" : p.toLowerCase()}</span>
                   </label>
                 );
               })}
@@ -757,7 +768,7 @@ export default function NewContentStudioPage() {
                 ) : (
                   <>
                     <Sparkles className="h-4 w-4" />
-                    <span>Generate 3 Platform Variants</span>
+                    <span>Generate {selectedPlatforms.length} Platform Variants</span>
                   </>
                 )}
               </button>
@@ -987,74 +998,126 @@ export default function NewContentStudioPage() {
               </div>
 
               {/* Social Card Simulation */}
-              <div className="max-w-md mx-auto rounded-2xl border border-slate-200 bg-slate-50/50 p-4 shadow-xs">
-                {/* Header */}
-                <div className="flex items-center gap-2.5 pb-3">
-                  <div className="h-9 w-9 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-xs">
-                    {clientInfo?.companyName?.slice(0, 2).toUpperCase() || "CC"}
+              {activePlatformTab === "TWITTER" ? (
+                <div className="max-w-md mx-auto rounded-2xl border border-slate-200 bg-white p-4 shadow-xs font-sans text-xs">
+                  {/* Twitter Header */}
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="h-9 w-9 rounded-full bg-slate-950 flex items-center justify-center text-white font-bold text-xs shadow-xs">
+                        ⚡
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-1">
+                          <span className="font-bold text-slate-900">{clientInfo?.companyName || "SPARK AI"}</span>
+                          <span className="inline-flex items-center justify-center h-3.5 w-3.5 rounded-full bg-blue-500 text-white text-[9px] font-bold">
+                            ✓
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-slate-400">@{(clientInfo?.companyName || "SparkQuant").toLowerCase().replace(/\s+/g, "")} · 2h</p>
+                      </div>
+                    </div>
+                    <span className="text-slate-900 font-bold text-base leading-none">𝕏</span>
                   </div>
-                  <div>
-                    <p className="text-xs font-bold text-slate-900">
-                      {clientInfo?.companyName || "Client Brand"}
+
+                  {/* Tweet Body */}
+                  <div className="mt-3 space-y-2 text-slate-800 text-xs">
+                    {currentVariant.hook && (
+                      <p className="font-bold text-slate-950 text-sm leading-snug">{currentVariant.hook}</p>
+                    )}
+                    <p className="whitespace-pre-wrap leading-relaxed">
+                      {currentVariant.caption || "Craft your tweet copy to see real-time X formatting..."}
                     </p>
-                    <p className="text-[10px] text-slate-400">
-                      {activePlatformTab === "INSTAGRAM"
-                        ? "@" + (clientInfo?.companyName || "brand").toLowerCase().replace(/\s+/g, "")
-                        : "Sponsored • Just now"}
-                    </p>
+                    {currentVariant.hashtags && (
+                      <p className="text-blue-500 font-medium text-xs">{currentVariant.hashtags}</p>
+                    )}
+                  </div>
+
+                  {/* Media Preview if attached */}
+                  {selectedMediaUrls[0] && (
+                    <div className="mt-3 rounded-xl overflow-hidden border border-slate-200 aspect-video">
+                      <img src={selectedMediaUrls[0]} alt="tweet media" className="w-full h-full object-cover" />
+                    </div>
+                  )}
+
+                  {/* Twitter Engagement Bar */}
+                  <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-slate-500 text-[11px]">
+                    <span className="hover:text-blue-500 cursor-pointer">💬 24</span>
+                    <span className="hover:text-emerald-500 cursor-pointer">🔁 89</span>
+                    <span className="hover:text-rose-500 cursor-pointer">❤️ 342</span>
+                    <span className="hover:text-blue-500 cursor-pointer">📊 14.8K</span>
+                    <span className="hover:text-blue-500 cursor-pointer">🔖 📤</span>
                   </div>
                 </div>
-
-                {/* Media Preview */}
-                <div className="relative aspect-video w-full rounded-xl overflow-hidden bg-slate-200 mb-3 flex items-center justify-center">
-                  {selectedMediaUrls[0] ? (
-                    <img
-                      src={selectedMediaUrls[0]}
-                      alt="preview"
-                      className="h-full w-full object-cover"
-                      onError={(e) => {
-                        (e.target as any).src =
-                          "https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=500";
-                      }}
-                    />
-                  ) : (
-                    <div className="text-center p-4 text-slate-400">
-                      <ImageIcon className="h-8 w-8 mx-auto mb-1 opacity-40" />
-                      <span className="text-xs">No media attached</span>
+              ) : (
+                <div className="max-w-md mx-auto rounded-2xl border border-slate-200 bg-slate-50/50 p-4 shadow-xs">
+                  {/* Header */}
+                  <div className="flex items-center gap-2.5 pb-3">
+                    <div className="h-9 w-9 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-xs">
+                      {clientInfo?.companyName?.slice(0, 2).toUpperCase() || "CC"}
                     </div>
-                  )}
-
-                  {/* TikTok On-Screen Overlay simulation */}
-                  {activePlatformTab === "TIKTOK" && currentVariant.onScreenText && (
-                    <div className="absolute inset-x-4 top-1/3 rounded-lg bg-black/70 p-2 text-center text-xs font-bold text-yellow-300 backdrop-blur-2xs">
-                      {currentVariant.onScreenText}
+                    <div>
+                      <p className="text-xs font-bold text-slate-900">
+                        {clientInfo?.companyName || "Client Brand"}
+                      </p>
+                      <p className="text-[10px] text-slate-400">
+                        {activePlatformTab === "INSTAGRAM"
+                          ? "@" + (clientInfo?.companyName || "brand").toLowerCase().replace(/\s+/g, "")
+                          : "Sponsored • Just now"}
+                      </p>
                     </div>
-                  )}
+                  </div>
+
+                  {/* Media Preview */}
+                  <div className="relative aspect-video w-full rounded-xl overflow-hidden bg-slate-200 mb-3 flex items-center justify-center">
+                    {selectedMediaUrls[0] ? (
+                      <img
+                        src={selectedMediaUrls[0]}
+                        alt="preview"
+                        className="h-full w-full object-cover"
+                        onError={(e) => {
+                          (e.target as any).src =
+                            "https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=500";
+                        }}
+                      />
+                    ) : (
+                      <div className="text-center p-4 text-slate-400">
+                        <ImageIcon className="h-8 w-8 mx-auto mb-1 opacity-40" />
+                        <span className="text-xs">No media attached</span>
+                      </div>
+                    )}
+
+                    {/* TikTok On-Screen Overlay simulation */}
+                    {activePlatformTab === "TIKTOK" && currentVariant.onScreenText && (
+                      <div className="absolute inset-x-4 top-1/3 rounded-lg bg-black/70 p-2 text-center text-xs font-bold text-yellow-300 backdrop-blur-2xs">
+                        {currentVariant.onScreenText}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Simulated Copy */}
+                  <div className="space-y-1.5 text-xs text-slate-800">
+                    {currentVariant.hook && (
+                      <p className="font-bold text-slate-900">{currentVariant.hook}</p>
+                    )}
+                    <p className="whitespace-pre-wrap leading-relaxed">
+                      {currentVariant.caption || "Generate or enter copy to see simulated feed appearance..."}
+                    </p>
+                    {currentVariant.hashtags && (
+                      <p className="text-blue-600 font-medium text-[11px]">{currentVariant.hashtags}</p>
+                    )}
+                    {currentVariant.cta && (
+                      <div className="mt-2 pt-2 border-t border-slate-200/60 flex items-center justify-between">
+                        <span className="text-[11px] font-semibold text-slate-700">
+                          {currentVariant.cta}
+                        </span>
+                        <span className="rounded-lg bg-blue-600 px-3 py-1 text-[10px] font-bold text-white">
+                          Learn More
+                        </span>
+                      </div>
+                    )}
+                  </div>
                 </div>
-
-                {/* Simulated Copy */}
-                <div className="space-y-1.5 text-xs text-slate-800">
-                  {currentVariant.hook && (
-                    <p className="font-bold text-slate-900">{currentVariant.hook}</p>
-                  )}
-                  <p className="whitespace-pre-wrap leading-relaxed">
-                    {currentVariant.caption || "Generate or enter copy to see simulated feed appearance..."}
-                  </p>
-                  {currentVariant.hashtags && (
-                    <p className="text-blue-600 font-medium text-[11px]">{currentVariant.hashtags}</p>
-                  )}
-                  {currentVariant.cta && (
-                    <div className="mt-2 pt-2 border-t border-slate-200/60 flex items-center justify-between">
-                      <span className="text-[11px] font-semibold text-slate-700">
-                        {currentVariant.cta}
-                      </span>
-                      <span className="rounded-lg bg-blue-600 px-3 py-1 text-[10px] font-bold text-white">
-                        Learn More
-                      </span>
-                    </div>
-                  )}
-                </div>
-              </div>
+              )}
             </div>
           </div>
         </div>

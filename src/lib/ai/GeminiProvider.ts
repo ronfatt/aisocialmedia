@@ -192,6 +192,13 @@ export class GeminiProvider implements IAIProvider {
           cta,
           hashtags: `#${context.brandName.replace(/\s+/g, "")} #${serviceName.replace(/\s+/g, "")} #Engineering #Fabrication #QualityCraftsmanship`,
         };
+      } else if (req.platform === "TWITTER") {
+        return {
+          hook: `While traditional models backtest the past, our AI is stress-testing liquidity regimes of 2027.`,
+          caption: `Transparency isn't a promise; it's a physical law.\n\n${context.brandName} deploys multi-agent quantitative intelligence across global macro assets with real-time on-chain cryptographic proof.\n\n🔗 Verified On-Chain Hash | ${cta}`,
+          cta,
+          hashtags: `#Quant #Alpha #AI #FinTech #${context.brandName.replace(/\s+/g, "")}`,
+        };
       } else {
         return {
           hook: `Can raw steel handle high-tolerance fabrication? Watch this:`,
@@ -220,7 +227,7 @@ export class GeminiProvider implements IAIProvider {
     const results: Record<string, GeneratedVariantOutput> = {};
 
     for (const p of params.platforms) {
-      const platformKey = p.toUpperCase() as "FACEBOOK" | "INSTAGRAM" | "TIKTOK";
+      const platformKey = p.toUpperCase() as "FACEBOOK" | "INSTAGRAM" | "TIKTOK" | "TWITTER";
       const override = params.platformOverrides?.[platformKey] || {};
 
       const req: GenerateVariantRequest = {

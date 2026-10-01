@@ -77,11 +77,11 @@ export function detectUnsupportedClaims(
  */
 export function evaluateContentQuality(
   captionOrVariant: string | { caption: string; platform?: any; headline?: string; hook?: string },
-  platformOrContext: "FACEBOOK" | "INSTAGRAM" | "TIKTOK" | ClientMarketingContext,
+  platformOrContext: "FACEBOOK" | "INSTAGRAM" | "TIKTOK" | "TWITTER" | ClientMarketingContext,
   contextParam?: ClientMarketingContext
 ) {
   let caption = "";
-  let platform: "FACEBOOK" | "INSTAGRAM" | "TIKTOK" = "FACEBOOK";
+  let platform: "FACEBOOK" | "INSTAGRAM" | "TIKTOK" | "TWITTER" = "FACEBOOK";
   let context: ClientMarketingContext;
 
   if (typeof captionOrVariant === "string") {
@@ -99,7 +99,7 @@ export function evaluateContentQuality(
 
   // Check for CTA
   const hasCta =
-    /\b(call|whatsapp|contact|enquire|dm|comment|link|visit|send|quote|get in touch|book|shop)\b/i.test(caption);
+    /\b(call|whatsapp|contact|enquire|dm|comment|link|visit|send|quote|get in touch|book|shop|thread|read|hash)\b/i.test(caption);
   if (!hasCta) {
     suggestions.push("Consider adding a clear call-to-action (CTA) to prompt client engagement.");
   }
@@ -113,6 +113,10 @@ export function evaluateContentQuality(
   }
 
   // Platform length guidelines
+  if (platform === "TWITTER" && caption.length > 280) {
+    suggestions.push("Twitter (X) posts perform best under 280 characters. Consider condensing for viral punch.");
+  }
+
   if (platform === "TIKTOK" && caption.length > 500) {
     suggestions.push("TikTok captions perform best when concise (under 250 characters). Consider shortening the caption.");
   }
